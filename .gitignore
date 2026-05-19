@@ -1,0 +1,15 @@
+# Build
+dist/
+*.tsbuildinfo
+
+# Deps
+node_modules/
+
+# Coverage / caches
+coverage/
+.nyc_output/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

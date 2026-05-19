@@ -1,0 +1,50 @@
+{
+  "name": "voiceml",
+  "version": "0.4.0",
+  "description": "Official TypeScript/Node SDK for the VoiceML REST API (Twilio-compatible voice + AMD service from VoiceTel)",
+  "type": "module",
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.cjs"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "npm run build:esm && npm run build:cjs && npm run build:types",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json && node scripts/rename-cjs.mjs",
+    "build:types": "tsc -p tsconfig.types.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "keywords": ["voiceml", "voicetel", "twilio-compatible", "telephony", "voice", "amd"],
+  "author": "VoiceTel <support@voicetel.com>",
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://voiceml.voicetel.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/voicetel/voiceml-node-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/voicetel/voiceml-node-sdk/issues"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "msw": "^2.4.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}
