@@ -3,6 +3,7 @@ export * from './calls.js';
 export * from './common.js';
 export * from './conferences.js';
 export * from './diagnostics.js';
+export * from './incoming_phone_numbers.js';
 export * from './queues.js';
 export * from './recordings.js';
 export * from './siprec.js';

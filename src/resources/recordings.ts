@@ -23,11 +23,14 @@ export class RecordingsResource extends BaseResource {
    *   - 200 OK: local file present.
    *   - 302 Found: archived to S3; the transport follows the presigned URL.
    *   - 410 Gone: local file gone AND no S3 key. Raises `GoneError`.
+   *
+   * Audio is served at `…/Recordings/{Sid}.wav` — the canonical `.json` suffix used by
+   * the JSON REST surface is intentionally NOT appended here.
    */
   async getAudio(recordingSid: string): Promise<RecordingAudio> {
-    const { body, headers } = await this.t.fetchBytes(
-      `${this.path('Recordings', recordingSid)}.wav`,
-    );
+    const wavPath =
+      `/2010-04-01/Accounts/${this.t.accountSid}/Recordings/${recordingSid}.wav`;
+    const { body, headers } = await this.t.fetchBytes(wavPath);
     return {
       sid: recordingSid,
       body,

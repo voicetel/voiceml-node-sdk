@@ -245,10 +245,12 @@ async function parseResponse<T>(response: Response): Promise<T> {
   }
   let code: number | string | null = null;
   let message = `HTTP ${response.status}`;
+  let moreInfo: string | null = null;
   if (body && typeof body === 'object') {
     const b = body as Record<string, unknown>;
     if (typeof b.code === 'number' || typeof b.code === 'string') code = b.code;
     if (typeof b.message === 'string') message = b.message;
+    if (typeof b.more_info === 'string') moreInfo = b.more_info;
   }
-  throw fromResponse(response.status, code, body, message);
+  throw fromResponse(response.status, code, body, message, moreInfo);
 }

@@ -3,7 +3,7 @@
  * (`AuthenticationError`, `NotFoundError`, …) when you want to branch on HTTP status family.
  *
  * The Twilio-shape error body (`{ code, message, more_info, status }`) is parsed into `code` /
- * `message` when present, with the raw payload exposed on `body`.
+ * `message` / `moreInfo` when present, with the raw payload exposed on `body`.
  */
 
 export class VoiceMLError extends Error {
@@ -14,20 +14,27 @@ export class ConfigurationError extends VoiceMLError {
   override readonly name = 'ConfigurationError';
 }
 
+export interface ApiErrorOptions {
+  statusCode: number;
+  code?: number | string | null;
+  body?: unknown;
+  moreInfo?: string | null;
+}
+
 export class ApiError extends VoiceMLError {
   override readonly name: string = 'ApiError';
   readonly statusCode: number;
   readonly code: number | string | null;
   readonly body: unknown;
+  /** Twilio-compat `more_info` URL from the error envelope (`null` when absent). */
+  readonly moreInfo: string | null;
 
-  constructor(
-    message: string,
-    options: { statusCode: number; code?: number | string | null; body?: unknown },
-  ) {
+  constructor(message: string, options: ApiErrorOptions) {
     super(message);
     this.statusCode = options.statusCode;
     this.code = options.code ?? null;
     this.body = options.body ?? null;
+    this.moreInfo = options.moreInfo ?? null;
   }
 }
 
@@ -64,8 +71,9 @@ export function fromResponse(
   code: number | string | null,
   body: unknown,
   message: string,
+  moreInfo: string | null = null,
 ): ApiError {
-  const opts = { statusCode, code, body };
+  const opts: ApiErrorOptions = { statusCode, code, body, moreInfo };
   switch (statusCode) {
     case 400:
       return new BadRequestError(message, opts);

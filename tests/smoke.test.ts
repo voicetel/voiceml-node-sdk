@@ -70,7 +70,7 @@ afterEach(() => {
 
 describe('module surface', () => {
   it('exports the right version', () => {
-    expect(VERSION).toBe('0.4.0');
+    expect(VERSION).toBe('0.5.0');
   });
 
   it('requires accountSid + apiKey', () => {
@@ -85,6 +85,7 @@ describe('module surface', () => {
     expect(c.queues).toBeDefined();
     expect(c.applications).toBeDefined();
     expect(c.recordings).toBeDefined();
+    expect(c.incomingPhoneNumbers).toBeDefined();
     expect(c.diagnostics).toBeDefined();
     expect(c.accountSid).toBe(ACCOUNT_SID);
     expect(c.baseUrl).toBe(BASE);
@@ -106,7 +107,7 @@ describe('calls.create', () => {
 
     expect(calls).toHaveLength(1);
     const [{ url, init }] = calls;
-    expect(url).toBe(`${BASE}/2010-04-01/Accounts/${ACCOUNT_SID}/Calls`);
+    expect(url).toBe(`${BASE}/2010-04-01/Accounts/${ACCOUNT_SID}/Calls.json`);
     expect(init.method).toBe('POST');
 
     const headers = init.headers as Record<string, string>;
@@ -370,10 +371,10 @@ describe('conferences.end', () => {
 });
 
 describe('recordings.getAudio', () => {
-  it('returns the bytes from the .wav endpoint', async () => {
+  it('returns the bytes from the .wav endpoint (and does NOT append .json)', async () => {
     const reSid = 'RE' + 'e'.repeat(32);
     const wavBytes = new Uint8Array([0x52, 0x49, 0x46, 0x46]); // "RIFF" magic
-    const { fetch } = fakeFetch([
+    const { fetch, calls } = fakeFetch([
       new Response(wavBytes, { status: 200, headers: { 'content-type': 'audio/wav' } }),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
@@ -382,5 +383,275 @@ describe('recordings.getAudio', () => {
     expect(audio.sid).toBe(reSid);
     expect(audio.contentType).toBe('audio/wav');
     expect(Array.from(audio.body)).toEqual([0x52, 0x49, 0x46, 0x46]);
+    // .wav must NOT have .json appended — and must not be double-suffixed
+    expect(calls[0]!.url).toBe(
+      `${BASE}/2010-04-01/Accounts/${ACCOUNT_SID}/Recordings/${reSid}.wav`,
+    );
+    expect(calls[0]!.url.endsWith('.wav')).toBe(true);
+    expect(calls[0]!.url.endsWith('.json')).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// v0.5.0: `.json` URL suffix coverage across the account-scoped resources.
+// ---------------------------------------------------------------------------
+
+describe('.json URL suffix', () => {
+  const emptyOk = (body: object) => jsonResponse(body);
+
+  it('appends .json to Calls list and Calls/{sid} get', async () => {
+    const sid = 'CA' + '0'.repeat(32);
+    const { fetch, calls } = fakeFetch([
+      emptyOk({ calls: [], page: 0, page_size: 50, total: 0 }),
+      emptyOk(callPayload(sid)),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.calls.list();
+    await c.calls.get(sid);
+
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls.json`,
+    );
+    expect(new URL(calls[1]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls/${sid}.json`,
+    );
+  });
+
+  it('appends .json to Conferences, Queues, Applications, Recordings paths', async () => {
+    const cfSid = 'CF' + '1'.repeat(32);
+    const quSid = 'QU' + '2'.repeat(32);
+    const apSid = 'AP' + '3'.repeat(32);
+    const reSid = 'RE' + '4'.repeat(32);
+    const { fetch, calls } = fakeFetch([
+      emptyOk({ conferences: [], page: 0, page_size: 50 }),
+      emptyOk({ sid: cfSid, account_sid: ACCOUNT_SID, friendly_name: 'x', status: 'in-progress', api_version: '2010-04-01', uri: '/x' }),
+      emptyOk({ queues: [], page: 0, page_size: 50 }),
+      emptyOk({ sid: quSid, account_sid: ACCOUNT_SID, friendly_name: 'x', current_size: 0, max_size: 200, average_wait_time: 0, date_created: 'x', date_updated: 'x', uri: '/x' }),
+      emptyOk({ applications: [], page: 0, page_size: 50 }),
+      emptyOk({ sid: apSid, account_sid: ACCOUNT_SID, friendly_name: 'x', api_version: '2010-04-01', voice_url: 'https://x', voice_caller_id_lookup: false, date_created: 'x', date_updated: 'x', uri: '/x' }),
+      emptyOk({ recordings: [] }),
+      emptyOk({ sid: reSid, account_sid: ACCOUNT_SID, call_sid: 'CA' + '0'.repeat(32), status: 'completed' }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.conferences.list();
+    await c.conferences.get(cfSid);
+    await c.queues.list();
+    await c.queues.get(quSid);
+    await c.applications.list();
+    await c.applications.get(apSid);
+    await c.recordings.list();
+    await c.recordings.get(reSid);
+
+    for (const call of calls) {
+      expect(new URL(call.url).pathname.endsWith('.json')).toBe(true);
+      // No double-append.
+      expect(new URL(call.url).pathname.endsWith('.json.json')).toBe(false);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// v0.5.0: IncomingPhoneNumbers resource — list/create/get/update/delete.
+// ---------------------------------------------------------------------------
+
+function incomingPhoneNumberPayload(
+  sid: string = 'PN' + '0'.repeat(32),
+  phoneNumber = '+18005551234',
+) {
+  return {
+    sid,
+    account_sid: ACCOUNT_SID,
+    phone_number: phoneNumber,
+    friendly_name: '',
+    api_version: '2010-04-01',
+    uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers/${sid}.json`,
+    voice_url: 'https://example.com/voice',
+    voice_method: 'POST' as const,
+    voice_fallback_url: '',
+    voice_fallback_method: 'POST' as const,
+    capabilities: { voice: true, sms: false, mms: false, fax: false },
+    date_created: 'Mon, 19 May 2026 12:00:00 +0000',
+    date_updated: 'Mon, 19 May 2026 12:00:00 +0000',
+  };
+}
+
+describe('incomingPhoneNumbers', () => {
+  it('list — request URL has .json, response carries pagination envelope', async () => {
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({
+        incoming_phone_numbers: [incomingPhoneNumberPayload()],
+        page: 0,
+        page_size: 50,
+        total: 1,
+        num_pages: 1,
+        start: 0,
+        end: 0,
+        first_page_uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers.json?PageSize=50&Page=0`,
+        next_page_uri: null,
+        previous_page_uri: null,
+        uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers.json?PageSize=50&Page=0`,
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const result = await c.incomingPhoneNumbers.list({ PhoneNumber: '+18005551234' });
+
+    expect(result.incoming_phone_numbers).toHaveLength(1);
+    expect(result.incoming_phone_numbers[0]!.sid.startsWith('PN')).toBe(true);
+    expect(result.page).toBe(0);
+    expect(result.page_size).toBe(50);
+    expect(result.next_page_uri).toBeNull();
+    expect(result.first_page_uri).toBeDefined();
+
+    const u = new URL(calls[0]!.url);
+    expect(u.pathname).toBe(`/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers.json`);
+    expect(u.searchParams.get('PhoneNumber')).toBe('+18005551234');
+  });
+
+  it('create — POSTs form body and returns PN-prefixed sid', async () => {
+    const { fetch, calls } = fakeFetch([jsonResponse(incomingPhoneNumberPayload(), 201)]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const result = await c.incomingPhoneNumbers.create({
+      PhoneNumber: '+18005551234',
+      VoiceUrl: 'https://example.com/voice',
+      VoiceMethod: 'POST',
+    });
+    expect(result.sid.startsWith('PN')).toBe(true);
+    expect(result.phone_number).toBe('+18005551234');
+    expect(result.capabilities.voice).toBe(true);
+    expect(result.capabilities.sms).toBe(false);
+
+    expect(calls[0]!.init.method).toBe('POST');
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers.json`,
+    );
+    const params = calls[0]!.init.body as URLSearchParams;
+    expect(params.get('PhoneNumber')).toBe('+18005551234');
+    expect(params.get('VoiceUrl')).toBe('https://example.com/voice');
+    expect(params.get('VoiceMethod')).toBe('POST');
+  });
+
+  it('get — fetches by PN sid with .json suffix', async () => {
+    const sid = 'PN' + 'a'.repeat(32);
+    const { fetch, calls } = fakeFetch([jsonResponse(incomingPhoneNumberPayload(sid))]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const result = await c.incomingPhoneNumbers.get(sid);
+    expect(result.sid).toBe(sid);
+
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers/${sid}.json`,
+    );
+  });
+
+  it('update — POSTs partial body to the {sid}.json endpoint', async () => {
+    const sid = 'PN' + 'b'.repeat(32);
+    const { fetch, calls } = fakeFetch([jsonResponse(incomingPhoneNumberPayload(sid))]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.incomingPhoneNumbers.update(sid, { VoiceUrl: 'https://new.example.com/voice' });
+
+    expect(calls[0]!.init.method).toBe('POST');
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers/${sid}.json`,
+    );
+    const params = calls[0]!.init.body as URLSearchParams;
+    expect(params.get('VoiceUrl')).toBe('https://new.example.com/voice');
+  });
+
+  it('delete — DELETE on {sid}.json, 204 returns void', async () => {
+    const sid = 'PN' + 'c'.repeat(32);
+    const { fetch, calls } = fakeFetch([new Response(null, { status: 204 })]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.incomingPhoneNumbers.delete(sid);
+
+    expect(calls[0]!.init.method).toBe('DELETE');
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers/${sid}.json`,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// v0.5.0: authToken alias for the constructor.
+// ---------------------------------------------------------------------------
+
+describe('client — authToken alias', () => {
+  it('accepts authToken as a drop-in alias for apiKey', async () => {
+    const sid = 'CA' + '1'.repeat(32);
+    const { fetch, calls } = fakeFetch([jsonResponse(callPayload(sid))]);
+    const c = new Client({ accountSid: ACCOUNT_SID, authToken: API_KEY, fetch });
+
+    const result = await c.calls.get(sid);
+    expect(result.sid).toBe(sid);
+
+    // Auth header must be the same as if apiKey had been used.
+    const headers = calls[0]!.init.headers as Record<string, string>;
+    const expectedAuth = 'Basic ' + Buffer.from(`${ACCOUNT_SID}:${API_KEY}`).toString('base64');
+    expect(headers.Authorization).toBe(expectedAuth);
+  });
+
+  it('throws ConfigurationError when both apiKey and authToken are passed', () => {
+    expect(
+      () => new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, authToken: API_KEY }),
+    ).toThrow(ConfigurationError);
+  });
+
+  it('throws ConfigurationError when neither apiKey nor authToken is passed', () => {
+    expect(() => new Client({ accountSid: ACCOUNT_SID })).toThrow(ConfigurationError);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// v0.5.0: ApiError.moreInfo accessor.
+// ---------------------------------------------------------------------------
+
+describe('errors — moreInfo accessor', () => {
+  it('populates ApiError.moreInfo from the response more_info field', async () => {
+    const sid = 'CA' + 'd'.repeat(32);
+    const { fetch } = fakeFetch([
+      jsonResponse(
+        {
+          code: 21211,
+          message: "Invalid 'To' number format",
+          more_info: 'https://www.twilio.com/docs/errors/21211',
+          status: 400,
+        },
+        400,
+      ),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    let err: unknown;
+    try {
+      await c.calls.get(sid);
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeInstanceOf(ApiError);
+    expect((err as ApiError).moreInfo).toBe('https://www.twilio.com/docs/errors/21211');
+    expect((err as ApiError).code).toBe(21211);
+    expect((err as ApiError).statusCode).toBe(400);
+  });
+
+  it('moreInfo is null when the response body has no more_info field', async () => {
+    const sid = 'CA' + 'e'.repeat(32);
+    const { fetch } = fakeFetch([
+      jsonResponse({ code: 20404, message: 'Not Found', status: 404 }, 404),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    let err: unknown;
+    try {
+      await c.calls.get(sid);
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeInstanceOf(NotFoundError);
+    expect((err as ApiError).moreInfo).toBeNull();
   });
 });
