@@ -35,6 +35,7 @@ export interface Recording {
   price_unit?: string;
   encryption_details?: Record<string, unknown>;
   subresource_uris?: Record<string, unknown>;
+  media_url?: string;
 }
 
 /**

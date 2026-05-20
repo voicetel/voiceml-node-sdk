@@ -65,6 +65,11 @@ export interface IncomingPhoneNumber {
     | 'registration-failure'
     | '';
   status?: string;
+  /**
+   * Twilio's number-type enum (`local` / `mobile` / `toll-free`). VoiceML doesn't classify
+   * DIDs by line type and emits an empty string. Permissive type to accept future values.
+   */
+  type?: string;
 }
 
 /**

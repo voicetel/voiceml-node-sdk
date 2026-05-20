@@ -70,7 +70,7 @@ afterEach(() => {
 
 describe('module surface', () => {
   it('exports the right version', () => {
-    expect(VERSION).toBe('0.6.1');
+    expect(VERSION).toBe('0.6.2');
   });
 
   it('requires accountSid + apiKey', () => {
@@ -653,5 +653,72 @@ describe('errors — moreInfo accessor', () => {
     }
     expect(err).toBeInstanceOf(NotFoundError);
     expect((err as ApiError).moreInfo).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// v0.6.2: spec sync — Recording.media_url (D5) + IncomingPhoneNumber.type (D6).
+// ---------------------------------------------------------------------------
+
+describe('v0.6.2 — Recording.media_url (D5)', () => {
+  it('deserializes a Recording with media_url present', async () => {
+    const reSid = 'RE' + 'f'.repeat(32);
+    const mediaUrl = `https://api.voiceml.example/2010-04-01/Accounts/${ACCOUNT_SID}/Recordings/${reSid}.wav`;
+    const { fetch } = fakeFetch([
+      jsonResponse({
+        sid: reSid,
+        account_sid: ACCOUNT_SID,
+        call_sid: 'CA' + '0'.repeat(32),
+        status: 'completed',
+        media_url: mediaUrl,
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const rec = await c.recordings.get(reSid);
+    expect(rec.sid).toBe(reSid);
+    expect(rec.media_url).toBe(mediaUrl);
+  });
+
+  it('deserializes a Recording without media_url (field is optional)', async () => {
+    const reSid = 'RE' + '1'.repeat(32);
+    const { fetch } = fakeFetch([
+      jsonResponse({
+        sid: reSid,
+        account_sid: ACCOUNT_SID,
+        call_sid: 'CA' + '0'.repeat(32),
+        status: 'completed',
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const rec = await c.recordings.get(reSid);
+    expect(rec.sid).toBe(reSid);
+    expect(rec.media_url).toBeUndefined();
+  });
+});
+
+describe('v0.6.2 — IncomingPhoneNumber.type (D6)', () => {
+  it('deserializes an IncomingPhoneNumber with type field', async () => {
+    const sid = 'PN' + '2'.repeat(32);
+    const { fetch } = fakeFetch([
+      jsonResponse({ ...incomingPhoneNumberPayload(sid), type: '' }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const num = await c.incomingPhoneNumbers.get(sid);
+    expect(num.sid).toBe(sid);
+    expect(num.type).toBe('');
+  });
+
+  it('accepts Twilio enum values for type (local / mobile / toll-free)', async () => {
+    const sid = 'PN' + '3'.repeat(32);
+    const { fetch } = fakeFetch([
+      jsonResponse({ ...incomingPhoneNumberPayload(sid), type: 'toll-free' }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const num = await c.incomingPhoneNumbers.get(sid);
+    expect(num.type).toBe('toll-free');
   });
 });
