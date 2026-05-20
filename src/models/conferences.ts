@@ -1,6 +1,6 @@
 import type { PageEnvelope } from './common.js';
 
-export type ConferenceStatus = 'in-progress' | 'completed';
+export type ConferenceStatus = 'init' | 'in-progress' | 'completed';
 export type ParticipantStatus =
   | 'queued'
   | 'connecting'

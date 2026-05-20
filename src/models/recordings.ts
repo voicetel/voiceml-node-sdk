@@ -1,11 +1,11 @@
 export type RecordingStatus =
   | 'in-progress'
-  | 'completed'
-  | 'failed'
-  | 'absent'
   | 'paused'
   | 'stopped'
-  | 'processing';
+  | 'processing'
+  | 'completed'
+  | 'absent'
+  | 'deleted';
 
 export type RecordingSource =
   | 'OutboundAPI'

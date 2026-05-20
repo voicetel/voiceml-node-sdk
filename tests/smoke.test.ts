@@ -70,7 +70,7 @@ afterEach(() => {
 
 describe('module surface', () => {
   it('exports the right version', () => {
-    expect(VERSION).toBe('0.5.0');
+    expect(VERSION).toBe('0.6.0');
   });
 
   it('requires accountSid + apiKey', () => {
