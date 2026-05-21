@@ -2,6 +2,7 @@ import type {
   Application,
   ApplicationList,
   CreateApplicationRequest,
+  ListApplicationsParams,
   UpdateApplicationRequest,
 } from '../models/index.js';
 import { BaseResource } from './base.js';
@@ -15,8 +16,12 @@ export class ApplicationsResource extends BaseResource {
     });
   }
 
-  list(): Promise<ApplicationList> {
-    return this.t.request<ApplicationList>({ method: 'GET', path: this.path('Applications') });
+  list(params: ListApplicationsParams = {}): Promise<ApplicationList> {
+    return this.t.request<ApplicationList>({
+      method: 'GET',
+      path: this.path('Applications'),
+      params,
+    });
   }
 
   get(applicationSid: string): Promise<Application> {

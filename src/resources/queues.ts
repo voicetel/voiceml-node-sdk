@@ -1,6 +1,7 @@
 import type {
   CreateQueueRequest,
   DequeueRequest,
+  ListQueueMembersParams,
   Queue,
   QueueList,
   QueueMember,
@@ -36,10 +37,11 @@ export class QueuesResource extends BaseResource {
 
   // --- Members ---
 
-  listMembers(queueSid: string): Promise<QueueMemberList> {
+  listMembers(queueSid: string, params: ListQueueMembersParams = {}): Promise<QueueMemberList> {
     return this.t.request<QueueMemberList>({
       method: 'GET',
       path: this.path('Queues', queueSid, 'Members'),
+      params,
     });
   }
 

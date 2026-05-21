@@ -1,12 +1,12 @@
-import type { Recording, RecordingAudio, RecordingList } from '../models/index.js';
+import type { Recording, RecordingAudio, RecordingList, ListRecordingsParams } from '../models/index.js';
 import { BaseResource } from './base.js';
 
 export class RecordingsResource extends BaseResource {
-  list(params: { Page?: number; PageSize?: number } = {}): Promise<RecordingList> {
+  list(params: ListRecordingsParams = {}): Promise<RecordingList> {
     return this.t.request<RecordingList>({
       method: 'GET',
       path: this.path('Recordings'),
-      params,
+      params: listRecordingsToQuery(params),
     });
   }
 
@@ -44,4 +44,16 @@ export class RecordingsResource extends BaseResource {
       path: this.path('Recordings', recordingSid),
     });
   }
+}
+
+function listRecordingsToQuery(p: ListRecordingsParams): Record<string, unknown> {
+  return {
+    DateCreated: p.dateCreated,
+    'DateCreated<': p.dateCreatedLt,
+    'DateCreated>': p.dateCreatedGt,
+    CallSid: p.CallSid,
+    ConferenceSid: p.ConferenceSid,
+    Page: p.Page,
+    PageSize: p.PageSize,
+  };
 }

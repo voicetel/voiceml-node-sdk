@@ -13,7 +13,8 @@ export type RecordingSource =
   | 'DialVerb'
   | 'Conference'
   | 'Trunking'
-  | 'StartCallRecordingAPI';
+  | 'StartCallRecordingAPI'
+  | 'StartConferenceRecordingAPI';
 
 export type RecordingUpdateStatus = 'stopped' | 'paused' | 'in-progress';
 
@@ -36,6 +37,29 @@ export interface Recording {
   encryption_details?: Record<string, unknown>;
   subresource_uris?: Record<string, unknown>;
   media_url?: string;
+  /** Twilio error taxonomy for failed recordings; `null` when no error. */
+  error_code?: number | null;
+}
+
+export interface ListRecordingsParams {
+  /** Twilio wire name: `DateCreated` (full UTC day). */
+  dateCreated?: string;
+  /** Twilio wire name: `DateCreated<`. */
+  dateCreatedLt?: string;
+  /** Twilio wire name: `DateCreated>`. */
+  dateCreatedGt?: string;
+  CallSid?: string;
+  ConferenceSid?: string;
+  Page?: number;
+  PageSize?: number;
+}
+
+export interface ListCallRecordingsParams {
+  dateCreated?: string;
+  dateCreatedLt?: string;
+  dateCreatedGt?: string;
+  Page?: number;
+  PageSize?: number;
 }
 
 /**

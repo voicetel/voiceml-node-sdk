@@ -132,10 +132,33 @@ export interface ListCallsParams {
   From?: string;
   Status?: CallStatus;
   ParentCallSid?: string;
-  /** Twilio wire name: `StartTime>=`. */
+  /** Twilio wire name: `StartTime` (full UTC day). */
+  startTime?: string;
+  /** Twilio wire name: `StartTime<`. */
+  startTimeLt?: string;
+  /** Twilio wire name: `StartTime>`. */
+  startTimeGt?: string;
+  /** Twilio wire name: `EndTime` (full UTC day). */
+  endTime?: string;
+  /** Twilio wire name: `EndTime<`. */
+  endTimeLt?: string;
+  /** Twilio wire name: `EndTime>`. */
+  endTimeGt?: string;
+  /**
+   * Twilio wire name: `StartTime>=`.
+   * @deprecated Prefer `startTimeGt` — legacy inclusive lower bound kept for compatibility.
+   */
   startTimeGte?: string;
-  /** Twilio wire name: `StartTime<=`. */
+  /**
+   * Twilio wire name: `StartTime<=`.
+   * @deprecated Prefer `startTimeLt` — legacy inclusive upper bound kept for compatibility.
+   */
   startTimeLte?: string;
+  Page?: number;
+  PageSize?: number;
+}
+
+export interface ListPageParams {
   Page?: number;
   PageSize?: number;
 }

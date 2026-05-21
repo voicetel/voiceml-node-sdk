@@ -2,6 +2,8 @@ import type {
   Conference,
   ConferenceList,
   EndConferenceRequest,
+  ListConferencesParams,
+  ListParticipantsParams,
   Participant,
   ParticipantList,
   RecordingList,
@@ -10,8 +12,12 @@ import type {
 import { BaseResource } from './base.js';
 
 export class ConferencesResource extends BaseResource {
-  list(): Promise<ConferenceList> {
-    return this.t.request<ConferenceList>({ method: 'GET', path: this.path('Conferences') });
+  list(params: ListConferencesParams = {}): Promise<ConferenceList> {
+    return this.t.request<ConferenceList>({
+      method: 'GET',
+      path: this.path('Conferences'),
+      params,
+    });
   }
 
   get(conferenceSid: string): Promise<Conference> {
@@ -34,10 +40,14 @@ export class ConferencesResource extends BaseResource {
 
   // --- Participants ---
 
-  listParticipants(conferenceSid: string): Promise<ParticipantList> {
+  listParticipants(
+    conferenceSid: string,
+    params: ListParticipantsParams = {},
+  ): Promise<ParticipantList> {
     return this.t.request<ParticipantList>({
       method: 'GET',
       path: this.path('Conferences', conferenceSid, 'Participants'),
+      params,
     });
   }
 

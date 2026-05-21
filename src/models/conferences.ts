@@ -7,6 +7,8 @@ export type ParticipantStatus =
   | 'ringing'
   | 'connected'
   | 'on-hold'
+  | 'complete'
+  | 'failed'
   | 'completed';
 
 export interface Conference {
@@ -36,6 +38,11 @@ export interface Participant {
   account_sid: string;
   muted: boolean;
   hold: boolean;
+  coaching: boolean;
+  /** Set when `coaching` is true — the participant this coach can speak to. */
+  call_sid_to_coach?: string;
+  /** Pre-join queue wait in seconds (Twilio string wire shape). */
+  queue_time: string;
   start_conference_on_enter: boolean;
   end_conference_on_exit: boolean;
   status: ParticipantStatus;
@@ -59,4 +66,19 @@ export interface EndConferenceRequest {
 export interface UpdateParticipantRequest {
   Muted?: boolean;
   Hold?: boolean;
+}
+
+export interface ListConferencesParams {
+  FriendlyName?: string;
+  Status?: ConferenceStatus;
+  Page?: number;
+  PageSize?: number;
+}
+
+export interface ListParticipantsParams {
+  Muted?: boolean;
+  Hold?: boolean;
+  Coaching?: boolean;
+  Page?: number;
+  PageSize?: number;
 }

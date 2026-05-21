@@ -37,3 +37,9 @@ export interface ApplicationBody {
 
 export type CreateApplicationRequest = ApplicationBody;
 export type UpdateApplicationRequest = ApplicationBody;
+
+export interface ListApplicationsParams {
+  FriendlyName?: string;
+  Page?: number;
+  PageSize?: number;
+}

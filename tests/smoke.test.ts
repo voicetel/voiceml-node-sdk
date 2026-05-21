@@ -70,7 +70,7 @@ afterEach(() => {
 
 describe('module surface', () => {
   it('exports the right version', () => {
-    expect(VERSION).toBe('0.6.2');
+    expect(VERSION).toBe('0.6.3');
   });
 
   it('requires accountSid + apiKey', () => {
@@ -720,5 +720,202 @@ describe('v0.6.2 — IncomingPhoneNumber.type (D6)', () => {
 
     const num = await c.incomingPhoneNumbers.get(sid);
     expect(num.type).toBe('toll-free');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// v0.6.3: Participant coaching fields, Recording.error_code, list filter params.
+// ---------------------------------------------------------------------------
+
+describe('v0.6.3 — Participant coaching fields', () => {
+  it('deserializes coaching, call_sid_to_coach, and queue_time', async () => {
+    const cfSid = 'CF' + '6'.repeat(32);
+    const callSid = 'CA' + '6'.repeat(32);
+    const coachSid = 'CA' + '7'.repeat(32);
+    const { fetch } = fakeFetch([
+      jsonResponse({
+        call_sid: callSid,
+        conference_sid: cfSid,
+        account_sid: ACCOUNT_SID,
+        muted: false,
+        hold: false,
+        coaching: true,
+        call_sid_to_coach: coachSid,
+        queue_time: '12',
+        start_conference_on_enter: true,
+        end_conference_on_exit: false,
+        status: 'connected',
+        api_version: '2010-04-01',
+        uri: '/x',
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const p = await c.conferences.getParticipant(cfSid, callSid);
+    expect(p.coaching).toBe(true);
+    expect(p.call_sid_to_coach).toBe(coachSid);
+    expect(p.queue_time).toBe('12');
+  });
+
+  it('accepts complete and failed participant status values', async () => {
+    for (const status of ['complete', 'failed'] as const) {
+      const cfSid = 'CF' + 'c'.repeat(32);
+      const callSid = 'CA' + 'd'.repeat(32);
+      const { fetch } = fakeFetch([
+        jsonResponse({
+          call_sid: callSid,
+          conference_sid: cfSid,
+          account_sid: ACCOUNT_SID,
+          muted: false,
+          hold: false,
+          coaching: false,
+          queue_time: '0',
+          start_conference_on_enter: true,
+          end_conference_on_exit: false,
+          status,
+          api_version: '2010-04-01',
+          uri: '/x',
+        }),
+      ]);
+      const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+      const p = await c.conferences.getParticipant(cfSid, callSid);
+      expect(p.status).toBe(status);
+    }
+  });
+});
+
+describe('v0.6.3 — Recording.error_code + StartConferenceRecordingAPI', () => {
+  it('deserializes error_code null and StartConferenceRecordingAPI source', async () => {
+    const reSid = 'RE' + '8'.repeat(32);
+    const { fetch } = fakeFetch([
+      jsonResponse({
+        sid: reSid,
+        account_sid: ACCOUNT_SID,
+        call_sid: 'CA' + '0'.repeat(32),
+        status: 'completed',
+        source: 'StartConferenceRecordingAPI',
+        error_code: null,
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const rec = await c.recordings.get(reSid);
+    expect(rec.source).toBe('StartConferenceRecordingAPI');
+    expect(rec.error_code).toBeNull();
+  });
+
+  it('deserializes a non-null error_code', async () => {
+    const reSid = 'RE' + '9'.repeat(32);
+    const { fetch } = fakeFetch([
+      jsonResponse({
+        sid: reSid,
+        account_sid: ACCOUNT_SID,
+        call_sid: 'CA' + '0'.repeat(32),
+        status: 'absent',
+        error_code: 13601,
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const rec = await c.recordings.get(reSid);
+    expect(rec.error_code).toBe(13601);
+  });
+});
+
+describe('v0.6.3 — list filter params', () => {
+  it('calls.list sends StartTime/EndTime triple operators', async () => {
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ calls: [], page: 0, page_size: 50, total: 0, uri: '/Calls' }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.calls.list({
+      startTime: '2026-05-01',
+      startTimeLt: '2026-05-02',
+      startTimeGt: '2026-04-30',
+      endTime: '2026-05-21',
+      endTimeLt: '2026-05-22',
+      endTimeGt: '2026-05-20',
+    });
+
+    const url = new URL(calls[0]!.url);
+    expect(url.searchParams.get('StartTime')).toBe('2026-05-01');
+    expect(url.searchParams.get('StartTime<')).toBe('2026-05-02');
+    expect(url.searchParams.get('StartTime>')).toBe('2026-04-30');
+    expect(url.searchParams.get('EndTime')).toBe('2026-05-21');
+    expect(url.searchParams.get('EndTime<')).toBe('2026-05-22');
+    expect(url.searchParams.get('EndTime>')).toBe('2026-05-20');
+  });
+
+  it('conferences.list and listParticipants forward filter params', async () => {
+    const cfSid = 'CF' + 'a'.repeat(32);
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ conferences: [], page: 0, page_size: 50, total: 0, uri: '/x' }),
+      jsonResponse({ participants: [], page: 1, page_size: 25, total: 0, uri: '/x' }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.conferences.list({ FriendlyName: 'incident-42', Status: 'in-progress', PageSize: 50 });
+    await c.conferences.listParticipants(cfSid, { Muted: true, Hold: false, Coaching: true, Page: 1 });
+
+    const confUrl = new URL(calls[0]!.url);
+    expect(confUrl.searchParams.get('FriendlyName')).toBe('incident-42');
+    expect(confUrl.searchParams.get('Status')).toBe('in-progress');
+    expect(confUrl.searchParams.get('PageSize')).toBe('50');
+
+    const partUrl = new URL(calls[1]!.url);
+    expect(partUrl.searchParams.get('Muted')).toBe('true');
+    expect(partUrl.searchParams.get('Hold')).toBe('false');
+    expect(partUrl.searchParams.get('Coaching')).toBe('true');
+    expect(partUrl.searchParams.get('Page')).toBe('1');
+  });
+
+  it('recordings.list and calls.listRecordings send DateCreated filters', async () => {
+    const callSid = 'CA' + 'b'.repeat(32);
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ recordings: [], page: 0, page_size: 50, total: 0, uri: '/x' }),
+      jsonResponse({ recordings: [], page: 0, page_size: 10, total: 0, uri: '/x' }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.recordings.list({
+      dateCreated: '2026-05-01',
+      dateCreatedLt: '2026-05-02',
+      dateCreatedGt: '2026-04-30',
+      CallSid: callSid,
+      PageSize: 50,
+    });
+    await c.calls.listRecordings(callSid, { dateCreated: '2026-05-01', PageSize: 10 });
+
+    const acctUrl = new URL(calls[0]!.url);
+    expect(acctUrl.searchParams.get('DateCreated')).toBe('2026-05-01');
+    expect(acctUrl.searchParams.get('DateCreated<')).toBe('2026-05-02');
+    expect(acctUrl.searchParams.get('DateCreated>')).toBe('2026-04-30');
+    expect(acctUrl.searchParams.get('CallSid')).toBe(callSid);
+
+    const callUrl = new URL(calls[1]!.url);
+    expect(callUrl.searchParams.get('DateCreated')).toBe('2026-05-01');
+    expect(callUrl.searchParams.get('PageSize')).toBe('10');
+  });
+
+  it('queues.create accepts MaxSize=0 (unlimited)', async () => {
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({
+        sid: 'QU' + '0'.repeat(32),
+        account_sid: ACCOUNT_SID,
+        friendly_name: 'unlimited',
+        current_size: 0,
+        max_size: 0,
+        average_wait_time: 0,
+        date_created: 'x',
+        date_updated: 'x',
+        uri: '/x',
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.queues.create({ FriendlyName: 'unlimited', MaxSize: 0 });
+    const params = calls[0]!.init.body as URLSearchParams;
+    expect(params.get('MaxSize')).toBe('0');
   });
 });

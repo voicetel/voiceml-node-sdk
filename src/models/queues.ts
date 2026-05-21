@@ -30,7 +30,7 @@ export interface QueueMemberList extends PageEnvelope {
   queue_members: QueueMember[];
 }
 
-/** Body for `POST /Queues`. Idempotent on `FriendlyName`. */
+/** Body for `POST /Queues`. Idempotent on `FriendlyName`. `MaxSize` 0 = unlimited (Twilio default). */
 export interface CreateQueueRequest {
   FriendlyName: string;
   MaxSize?: number;
@@ -45,4 +45,9 @@ export interface UpdateQueueRequest {
 export interface DequeueRequest {
   Url: string;
   Method?: HttpMethod;
+}
+
+export interface ListQueueMembersParams {
+  Page?: number;
+  PageSize?: number;
 }

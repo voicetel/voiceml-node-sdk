@@ -5,9 +5,11 @@ import type {
   CreateCallRequest,
   EventsList,
   ListCallsParams,
+  ListPageParams,
   NotificationsList,
   Recording,
   RecordingList,
+  ListCallRecordingsParams,
   SiprecList,
   SiprecSession,
   StartRecordingRequest,
@@ -56,10 +58,11 @@ export class CallsResource extends BaseResource {
 
   // --- Recordings (call-scoped) ---
 
-  listRecordings(callSid: string): Promise<RecordingList> {
+  listRecordings(callSid: string, params: ListCallRecordingsParams = {}): Promise<RecordingList> {
     return this.t.request<RecordingList>({
       method: 'GET',
       path: this.path('Calls', callSid, 'Recordings'),
+      params: listCallRecordingsToQuery(params),
     });
   }
 
@@ -210,17 +213,19 @@ export class CallsResource extends BaseResource {
 
   // --- Notifications / Events (compat stubs) ---
 
-  listNotifications(callSid: string): Promise<NotificationsList> {
+  listNotifications(callSid: string, params: ListPageParams = {}): Promise<NotificationsList> {
     return this.t.request<NotificationsList>({
       method: 'GET',
       path: this.path('Calls', callSid, 'Notifications'),
+      params,
     });
   }
 
-  listEvents(callSid: string): Promise<EventsList> {
+  listEvents(callSid: string, params: ListPageParams = {}): Promise<EventsList> {
     return this.t.request<EventsList>({
       method: 'GET',
       path: this.path('Calls', callSid, 'Events'),
+      params,
     });
   }
 
@@ -252,13 +257,29 @@ export class CallsResource extends BaseResource {
   }
 }
 
+function listCallRecordingsToQuery(p: ListCallRecordingsParams): Record<string, unknown> {
+  return {
+    DateCreated: p.dateCreated,
+    'DateCreated<': p.dateCreatedLt,
+    'DateCreated>': p.dateCreatedGt,
+    Page: p.Page,
+    PageSize: p.PageSize,
+  };
+}
+
 function listCallsToQuery(p: ListCallsParams): Record<string, unknown> {
   return {
     To: p.To,
     From: p.From,
     Status: p.Status,
     ParentCallSid: p.ParentCallSid,
-    // Twilio's literal wire names for date filters.
+    StartTime: p.startTime,
+    'StartTime<': p.startTimeLt,
+    'StartTime>': p.startTimeGt,
+    EndTime: p.endTime,
+    'EndTime<': p.endTimeLt,
+    'EndTime>': p.endTimeGt,
+    // Legacy inclusive bounds — still accepted by the server.
     'StartTime>=': p.startTimeGte,
     'StartTime<=': p.startTimeLte,
     Page: p.Page,
