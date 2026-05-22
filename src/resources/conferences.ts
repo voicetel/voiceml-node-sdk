@@ -2,6 +2,7 @@ import type {
   Conference,
   ConferenceList,
   EndConferenceRequest,
+  ListCallRecordingsParams,
   ListConferencesParams,
   ListParticipantsParams,
   Participant,
@@ -16,7 +17,7 @@ export class ConferencesResource extends BaseResource {
     return this.t.request<ConferenceList>({
       method: 'GET',
       path: this.path('Conferences'),
-      params,
+      params: { ...params },
     });
   }
 
@@ -47,7 +48,7 @@ export class ConferencesResource extends BaseResource {
     return this.t.request<ParticipantList>({
       method: 'GET',
       path: this.path('Conferences', conferenceSid, 'Participants'),
-      params,
+      params: { ...params },
     });
   }
 
@@ -79,10 +80,25 @@ export class ConferencesResource extends BaseResource {
 
   // --- Recordings ---
 
-  listRecordings(conferenceSid: string): Promise<RecordingList> {
+  listRecordings(
+    conferenceSid: string,
+    params: ListCallRecordingsParams = {},
+  ): Promise<RecordingList> {
     return this.t.request<RecordingList>({
       method: 'GET',
       path: this.path('Conferences', conferenceSid, 'Recordings'),
+      params: listCallRecordingsToQuery(params),
     });
   }
+}
+
+function listCallRecordingsToQuery(p: ListCallRecordingsParams): Record<string, unknown> {
+  return {
+    DateCreated: p.dateCreated,
+    'DateCreated<': p.dateCreatedLt,
+    'DateCreated>': p.dateCreatedGt,
+    Page: p.Page,
+    PageSize: p.PageSize,
+    PageToken: p.PageToken,
+  };
 }

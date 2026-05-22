@@ -73,6 +73,7 @@ export interface ListConferencesParams {
   Status?: ConferenceStatus;
   Page?: number;
   PageSize?: number;
+  PageToken?: string;
 }
 
 export interface ListParticipantsParams {
@@ -81,4 +82,5 @@ export interface ListParticipantsParams {
   Coaching?: boolean;
   Page?: number;
   PageSize?: number;
+  PageToken?: string;
 }

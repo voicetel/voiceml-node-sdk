@@ -42,4 +42,5 @@ export interface ListApplicationsParams {
   FriendlyName?: string;
   Page?: number;
   PageSize?: number;
+  PageToken?: string;
 }

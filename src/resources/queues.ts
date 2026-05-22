@@ -1,6 +1,7 @@
 import type {
   CreateQueueRequest,
   DequeueRequest,
+  ListPageParams,
   ListQueueMembersParams,
   Queue,
   QueueList,
@@ -15,8 +16,12 @@ export class QueuesResource extends BaseResource {
     return this.t.request<Queue>({ method: 'POST', path: this.path('Queues'), form: body });
   }
 
-  list(): Promise<QueueList> {
-    return this.t.request<QueueList>({ method: 'GET', path: this.path('Queues') });
+  list(params: ListPageParams = {}): Promise<QueueList> {
+    return this.t.request<QueueList>({
+      method: 'GET',
+      path: this.path('Queues'),
+      params: { ...params },
+    });
   }
 
   get(queueSid: string): Promise<Queue> {
@@ -41,7 +46,7 @@ export class QueuesResource extends BaseResource {
     return this.t.request<QueueMemberList>({
       method: 'GET',
       path: this.path('Queues', queueSid, 'Members'),
-      params,
+      params: { ...params },
     });
   }
 

@@ -50,4 +50,5 @@ export interface DequeueRequest {
 export interface ListQueueMembersParams {
   Page?: number;
   PageSize?: number;
+  PageToken?: string;
 }

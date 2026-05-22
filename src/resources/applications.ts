@@ -20,7 +20,7 @@ export class ApplicationsResource extends BaseResource {
     return this.t.request<ApplicationList>({
       method: 'GET',
       path: this.path('Applications'),
-      params,
+      params: { ...params },
     });
   }
 

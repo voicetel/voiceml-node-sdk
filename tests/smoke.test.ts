@@ -70,7 +70,7 @@ afterEach(() => {
 
 describe('module surface', () => {
   it('exports the right version', () => {
-    expect(VERSION).toBe('0.6.3');
+    expect(VERSION).toBe('0.6.4');
   });
 
   it('requires accountSid + apiKey', () => {
@@ -896,6 +896,18 @@ describe('v0.6.3 — list filter params', () => {
     const callUrl = new URL(calls[1]!.url);
     expect(callUrl.searchParams.get('DateCreated')).toBe('2026-05-01');
     expect(callUrl.searchParams.get('PageSize')).toBe('10');
+  });
+
+  it('calls.list sends PageToken (spec v0.6.4)', async () => {
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ calls: [], page: 0, page_size: 50, total: 0, uri: '/Calls' }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.calls.list({ PageToken: 'cursor-abc123' });
+
+    const url = new URL(calls[0]!.url);
+    expect(url.searchParams.get('PageToken')).toBe('cursor-abc123');
   });
 
   it('queues.create accepts MaxSize=0 (unlimited)', async () => {

@@ -88,6 +88,7 @@ export interface ListIncomingPhoneNumbersParams {
   PhoneNumber?: string;
   Page?: number;
   PageSize?: number;
+  PageToken?: string;
 }
 
 /**

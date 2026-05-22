@@ -52,6 +52,7 @@ export interface ListRecordingsParams {
   ConferenceSid?: string;
   Page?: number;
   PageSize?: number;
+  PageToken?: string;
 }
 
 export interface ListCallRecordingsParams {
@@ -60,6 +61,7 @@ export interface ListCallRecordingsParams {
   dateCreatedGt?: string;
   Page?: number;
   PageSize?: number;
+  PageToken?: string;
 }
 
 /**

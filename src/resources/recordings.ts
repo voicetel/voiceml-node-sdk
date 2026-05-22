@@ -55,5 +55,6 @@ function listRecordingsToQuery(p: ListRecordingsParams): Record<string, unknown>
     ConferenceSid: p.ConferenceSid,
     Page: p.Page,
     PageSize: p.PageSize,
+    PageToken: p.PageToken,
   };
 }

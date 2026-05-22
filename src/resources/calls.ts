@@ -217,7 +217,7 @@ export class CallsResource extends BaseResource {
     return this.t.request<NotificationsList>({
       method: 'GET',
       path: this.path('Calls', callSid, 'Notifications'),
-      params,
+      params: { ...params },
     });
   }
 
@@ -225,7 +225,7 @@ export class CallsResource extends BaseResource {
     return this.t.request<EventsList>({
       method: 'GET',
       path: this.path('Calls', callSid, 'Events'),
-      params,
+      params: { ...params },
     });
   }
 
@@ -264,6 +264,7 @@ function listCallRecordingsToQuery(p: ListCallRecordingsParams): Record<string, 
     'DateCreated>': p.dateCreatedGt,
     Page: p.Page,
     PageSize: p.PageSize,
+    PageToken: p.PageToken,
   };
 }
 
@@ -284,5 +285,6 @@ function listCallsToQuery(p: ListCallsParams): Record<string, unknown> {
     'StartTime<=': p.startTimeLte,
     Page: p.Page,
     PageSize: p.PageSize,
+    PageToken: p.PageToken,
   };
 }

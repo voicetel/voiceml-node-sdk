@@ -156,9 +156,11 @@ export interface ListCallsParams {
   startTimeLte?: string;
   Page?: number;
   PageSize?: number;
+  PageToken?: string;
 }
 
 export interface ListPageParams {
   Page?: number;
   PageSize?: number;
+  PageToken?: string;
 }
