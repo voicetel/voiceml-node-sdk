@@ -4,6 +4,7 @@ import type {
   CallTranscription,
   CreateCallRequest,
   EventsList,
+  ListCallNotificationsParams,
   ListCallsParams,
   ListPageParams,
   NotificationsList,
@@ -213,11 +214,24 @@ export class CallsResource extends BaseResource {
 
   // --- Notifications / Events (compat stubs) ---
 
-  listNotifications(callSid: string, params: ListPageParams = {}): Promise<NotificationsList> {
+  listNotifications(
+    callSid: string,
+    params: ListCallNotificationsParams = {},
+  ): Promise<NotificationsList> {
     return this.t.request<NotificationsList>({
       method: 'GET',
       path: this.path('Calls', callSid, 'Notifications'),
-      params: { ...params },
+      params: listNotificationsToQuery(params),
+    });
+  }
+
+  getNotification(
+    callSid: string,
+    notificationSid: string,
+  ): Promise<Record<string, unknown>> {
+    return this.t.request<Record<string, unknown>>({
+      method: 'GET',
+      path: this.path('Calls', callSid, 'Notifications', notificationSid),
     });
   }
 
@@ -265,6 +279,18 @@ function listCallRecordingsToQuery(p: ListCallRecordingsParams): Record<string, 
     Page: p.Page,
     PageSize: p.PageSize,
     PageToken: p.PageToken,
+  };
+}
+
+function listNotificationsToQuery(p: ListCallNotificationsParams): Record<string, unknown> {
+  return {
+    Page: p.Page,
+    PageSize: p.PageSize,
+    PageToken: p.PageToken,
+    Log: p.Log,
+    MessageDate: p.messageDate,
+    'MessageDate<': p.messageDateLt,
+    'MessageDate>': p.messageDateGt,
   };
 }
 

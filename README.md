@@ -1,6 +1,6 @@
 # voiceml
 
-Official TypeScript/Node SDK for the [VoiceML](https://voicetel.com/docs/api/v0.6/voiceml/) REST API — VoiceTel's outbound voice + AMD service with a Twilio-shaped REST surface.
+Official TypeScript/Node SDK for the [VoiceML](https://voicetel.com/docs/api/v0.6/voiceml/) REST API — VoiceTel's outbound voice + AMD service with a Twilio-compatible REST surface.
 
 Wire format, auth model (HTTP Basic with `AccountSid` as username, per-tenant API key as password), error codes, and pagination envelope all match Twilio's documented Programmable Voice surface. If you've used `twilio-node`, the patterns here will feel familiar.
 
@@ -59,7 +59,7 @@ Every non-2xx response raises a subclass of `ApiError`, keyed off HTTP status:
 | 501 | `NotImplementedAPIError` |
 | 5xx | `ServerError` |
 
-`ApiError` is the catch-all base. The Twilio-shape body (`code`, `message`, `more_info`, `status`) is parsed into `error.code` / `error.message` with the raw payload on `error.body`.
+`ApiError` is the catch-all base. The Twilio-compatible body (`code`, `message`, `more_info`, `status`) is parsed into `error.code` / `error.message` with the raw payload on `error.body`.
 
 ## Twilio drop-in
 
@@ -79,7 +79,7 @@ Method names follow the table above (`client.calls.create({…})`, `client.queue
 
 ## Pagination
 
-List operations return a `…List` interface with a Twilio-shape pagination envelope (`page`, `page_size`, `total`, `next_page_uri`, `previous_page_uri`, …). For `/Calls`, use `iterate()` for cursor-style streaming:
+List operations return a `…List` interface with a Twilio-compatible pagination envelope (`page`, `page_size`, `total`, `next_page_uri`, `previous_page_uri`, …). For `/Calls`, use `iterate()` for cursor-style streaming:
 
 ```ts
 for await (const call of c.calls.iterate({ Status: 'completed' })) {

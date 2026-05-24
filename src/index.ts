@@ -1,7 +1,7 @@
 /**
  * Official TypeScript/Node SDK for the VoiceML REST API.
  *
- * VoiceML is VoiceTel's outbound voice + AMD service with a Twilio-shaped REST surface
+ * VoiceML is VoiceTel's outbound voice + AMD service with a Twilio-compatible REST surface
  * (`https://voiceml.voicetel.com`). The wire format, auth model, error codes, and
  * pagination envelope match Twilio's documented Programmable Voice surface — existing
  * Twilio Node SDK patterns map across with the same constructor shape.

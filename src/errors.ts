@@ -2,7 +2,7 @@
  * Error hierarchy. Catch `VoiceMLError` to handle any SDK error; catch the specific subclass
  * (`AuthenticationError`, `NotFoundError`, …) when you want to branch on HTTP status family.
  *
- * The Twilio-shape error body (`{ code, message, more_info, status }`) is parsed into `code` /
+ * The Twilio-compatible error body (`{ code, message, more_info, status }`) is parsed into `code` /
  * `message` / `moreInfo` when present, with the raw payload exposed on `body`.
  */
 

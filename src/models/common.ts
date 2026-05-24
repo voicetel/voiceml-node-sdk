@@ -1,4 +1,4 @@
-/** Twilio-shape pagination envelope. Subclasses bind the concrete resource-list field. */
+/** Twilio-compatible pagination envelope. Subclasses bind the concrete resource-list field. */
 export interface PageEnvelope {
   page: number;
   page_size: number;
@@ -12,7 +12,7 @@ export interface PageEnvelope {
   uri?: string;
 }
 
-/** Twilio-shape error body, surfaced on `error.body` for non-2xx responses. */
+/** Twilio-compatible error body, surfaced on `error.body` for non-2xx responses. */
 export interface ErrorBody {
   code?: number;
   message?: string;

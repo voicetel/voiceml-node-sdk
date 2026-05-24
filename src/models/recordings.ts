@@ -50,9 +50,14 @@ export interface ListRecordingsParams {
   dateCreatedGt?: string;
   CallSid?: string;
   ConferenceSid?: string;
+  IncludeSoftDeleted?: boolean;
   Page?: number;
   PageSize?: number;
   PageToken?: string;
+}
+
+export interface GetRecordingParams {
+  IncludeSoftDeleted?: boolean;
 }
 
 export interface ListCallRecordingsParams {
@@ -67,7 +72,7 @@ export interface ListCallRecordingsParams {
 /**
  * Recordings list response.
  *
- * The account-scoped endpoint (`GET /Recordings`) returns the canonical Twilio fields
+ * The account-scoped endpoint (`GET /Recordings`) returns the full Twilio-compatible pagination fields
  * (`recordings/page/page_size/total`). Per-call (`GET /Calls/{sid}/Recordings`) and
  * per-conference (`GET /Conferences/{sid}/Recordings`) endpoints currently return only
  * `recordings` — the other pagination fields will be `undefined`.

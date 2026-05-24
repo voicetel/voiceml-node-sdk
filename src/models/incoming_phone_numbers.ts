@@ -1,7 +1,7 @@
 import type { HttpMethod, PageEnvelope } from './common.js';
 
 /**
- * Twilio-shape capability matrix on an `IncomingPhoneNumber`. VoiceML is voice-only —
+ * Twilio-compatible capability matrix on an `IncomingPhoneNumber`. VoiceML is voice-only —
  * `voice` is always `true`, the rest emit `false`. Modeled as required-non-null fields
  * so consumer code (`number.capabilities.voice`) doesn't need optional-chaining.
  */
@@ -73,7 +73,7 @@ export interface IncomingPhoneNumber {
 }
 
 /**
- * Page of incoming phone numbers — Twilio-shape envelope.
+ * Page of incoming phone numbers — Twilio-compatible envelope.
  *
  * `incoming_phone_numbers` is always present (may be empty). The standard pagination
  * fields (`page`, `page_size`, `total`, `*_page_uri`) match the rest of the SDK and
@@ -86,6 +86,17 @@ export interface IncomingPhoneNumberList extends PageEnvelope {
 export interface ListIncomingPhoneNumbersParams {
   /** Exact-match E.164 filter. Returns a 0-or-1-row envelope. */
   PhoneNumber?: string;
+  Page?: number;
+  PageSize?: number;
+  PageToken?: string;
+}
+
+/** Query params for type-specific list endpoints (`Local`, `Mobile`, `TollFree`). */
+export interface ListTypedIncomingPhoneNumbersParams {
+  PhoneNumber?: string;
+  FriendlyName?: string;
+  Beta?: boolean;
+  Origin?: string;
   Page?: number;
   PageSize?: number;
   PageToken?: string;

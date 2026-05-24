@@ -68,9 +68,35 @@ export interface UpdateParticipantRequest {
   Hold?: boolean;
 }
 
+/** Body for `POST /Conferences/{sid}/Participants`. `From` and `To` are required. */
+export interface CreateParticipantRequest {
+  From: string;
+  To: string;
+  Label?: string;
+  Muted?: boolean;
+  StartConferenceOnEnter?: boolean;
+  EndConferenceOnExit?: boolean;
+  Timeout?: number;
+  StatusCallback?: string;
+  StatusCallbackMethod?: string;
+  StatusCallbackEvent?: string;
+}
+
 export interface ListConferencesParams {
   FriendlyName?: string;
   Status?: ConferenceStatus;
+  /** Twilio wire name: `DateCreated` (full UTC day). */
+  dateCreated?: string;
+  /** Twilio wire name: `DateCreated<`. */
+  dateCreatedLt?: string;
+  /** Twilio wire name: `DateCreated>`. */
+  dateCreatedGt?: string;
+  /** Twilio wire name: `DateUpdated` (full UTC day). */
+  dateUpdated?: string;
+  /** Twilio wire name: `DateUpdated<`. */
+  dateUpdatedLt?: string;
+  /** Twilio wire name: `DateUpdated>`. */
+  dateUpdatedGt?: string;
   Page?: number;
   PageSize?: number;
   PageToken?: string;

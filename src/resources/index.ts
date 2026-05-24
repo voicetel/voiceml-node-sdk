@@ -3,5 +3,6 @@ export { CallsResource } from './calls.js';
 export { ConferencesResource } from './conferences.js';
 export { DiagnosticsResource } from './diagnostics.js';
 export { IncomingPhoneNumbersResource } from './incoming_phone_numbers.js';
+export { NotificationsResource } from './notifications.js';
 export { QueuesResource } from './queues.js';
 export { RecordingsResource } from './recordings.js';

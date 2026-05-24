@@ -3,6 +3,7 @@ import type {
   IncomingPhoneNumber,
   IncomingPhoneNumberList,
   ListIncomingPhoneNumbersParams,
+  ListTypedIncomingPhoneNumbersParams,
   UpdateIncomingPhoneNumberRequest,
 } from '../models/index.js';
 import { BaseResource } from './base.js';
@@ -54,6 +55,54 @@ export class IncomingPhoneNumbersResource extends BaseResource {
     await this.t.request<void>({
       method: 'DELETE',
       path: this.path('IncomingPhoneNumbers', sid),
+    });
+  }
+
+  listLocal(params: ListTypedIncomingPhoneNumbersParams = {}): Promise<IncomingPhoneNumberList> {
+    return this.t.request<IncomingPhoneNumberList>({
+      method: 'GET',
+      path: this.path('IncomingPhoneNumbers', 'Local'),
+      params: { ...params },
+    });
+  }
+
+  createLocal(body: CreateIncomingPhoneNumberRequest): Promise<IncomingPhoneNumber> {
+    return this.t.request<IncomingPhoneNumber>({
+      method: 'POST',
+      path: this.path('IncomingPhoneNumbers', 'Local'),
+      form: body,
+    });
+  }
+
+  listMobile(params: ListTypedIncomingPhoneNumbersParams = {}): Promise<IncomingPhoneNumberList> {
+    return this.t.request<IncomingPhoneNumberList>({
+      method: 'GET',
+      path: this.path('IncomingPhoneNumbers', 'Mobile'),
+      params: { ...params },
+    });
+  }
+
+  createMobile(body: CreateIncomingPhoneNumberRequest): Promise<IncomingPhoneNumber> {
+    return this.t.request<IncomingPhoneNumber>({
+      method: 'POST',
+      path: this.path('IncomingPhoneNumbers', 'Mobile'),
+      form: body,
+    });
+  }
+
+  listTollFree(params: ListTypedIncomingPhoneNumbersParams = {}): Promise<IncomingPhoneNumberList> {
+    return this.t.request<IncomingPhoneNumberList>({
+      method: 'GET',
+      path: this.path('IncomingPhoneNumbers', 'TollFree'),
+      params: { ...params },
+    });
+  }
+
+  createTollFree(body: CreateIncomingPhoneNumberRequest): Promise<IncomingPhoneNumber> {
+    return this.t.request<IncomingPhoneNumber>({
+      method: 'POST',
+      path: this.path('IncomingPhoneNumbers', 'TollFree'),
+      form: body,
     });
   }
 }

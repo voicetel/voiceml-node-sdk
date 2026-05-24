@@ -1,4 +1,10 @@
-import type { Recording, RecordingAudio, RecordingList, ListRecordingsParams } from '../models/index.js';
+import type {
+  Recording,
+  RecordingAudio,
+  RecordingList,
+  GetRecordingParams,
+  ListRecordingsParams,
+} from '../models/index.js';
 import { BaseResource } from './base.js';
 
 export class RecordingsResource extends BaseResource {
@@ -10,10 +16,11 @@ export class RecordingsResource extends BaseResource {
     });
   }
 
-  get(recordingSid: string): Promise<Recording> {
+  get(recordingSid: string, params: GetRecordingParams = {}): Promise<Recording> {
     return this.t.request<Recording>({
       method: 'GET',
       path: this.path('Recordings', recordingSid),
+      params: getRecordingToQuery(params),
     });
   }
 
@@ -53,8 +60,15 @@ function listRecordingsToQuery(p: ListRecordingsParams): Record<string, unknown>
     'DateCreated>': p.dateCreatedGt,
     CallSid: p.CallSid,
     ConferenceSid: p.ConferenceSid,
+    IncludeSoftDeleted: p.IncludeSoftDeleted,
     Page: p.Page,
     PageSize: p.PageSize,
     PageToken: p.PageToken,
+  };
+}
+
+function getRecordingToQuery(p: GetRecordingParams): Record<string, unknown> {
+  return {
+    IncludeSoftDeleted: p.IncludeSoftDeleted,
   };
 }

@@ -70,7 +70,7 @@ afterEach(() => {
 
 describe('module surface', () => {
   it('exports the right version', () => {
-    expect(VERSION).toBe('0.6.4');
+    expect(VERSION).toBe('0.6.6');
   });
 
   it('requires accountSid + apiKey', () => {
@@ -86,6 +86,7 @@ describe('module surface', () => {
     expect(c.applications).toBeDefined();
     expect(c.recordings).toBeDefined();
     expect(c.incomingPhoneNumbers).toBeDefined();
+    expect(c.notifications).toBeDefined();
     expect(c.diagnostics).toBeDefined();
     expect(c.accountSid).toBe(ACCOUNT_SID);
     expect(c.baseUrl).toBe(BASE);
@@ -123,7 +124,7 @@ describe('calls.create', () => {
 });
 
 describe('calls.list', () => {
-  it('round-trips Twilio-shape filter params including StartTime>= and StartTime<=', async () => {
+  it('round-trips Twilio-compatible filter params including StartTime>= and StartTime<=', async () => {
     const { fetch, calls } = fakeFetch([
       jsonResponse({
         calls: [callPayload()],
@@ -929,5 +930,282 @@ describe('v0.6.3 — list filter params', () => {
     await c.queues.create({ FriendlyName: 'unlimited', MaxSize: 0 });
     const params = calls[0]!.init.body as URLSearchParams;
     expect(params.get('MaxSize')).toBe('0');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// v0.6.6: spec sync — participants, notifications, recordings, conferences.
+// ---------------------------------------------------------------------------
+
+describe('v0.6.6 — conferences.createParticipant', () => {
+  it('POSTs From and To to /Conferences/{sid}/Participants', async () => {
+    const cfSid = 'CF' + 'f'.repeat(32);
+    const callSid = 'CA' + 'f'.repeat(32);
+    const { fetch, calls } = fakeFetch([
+      jsonResponse(
+        {
+          call_sid: callSid,
+          conference_sid: cfSid,
+          account_sid: ACCOUNT_SID,
+          muted: false,
+          hold: false,
+          coaching: false,
+          queue_time: '0',
+          start_conference_on_enter: true,
+          end_conference_on_exit: false,
+          status: 'queued',
+          api_version: '2010-04-01',
+          uri: '/x',
+        },
+        201,
+      ),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.conferences.createParticipant(cfSid, {
+      From: '+18005550000',
+      To: '+18005551234',
+    });
+
+    expect(calls[0]!.init.method).toBe('POST');
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences/${cfSid}/Participants.json`,
+    );
+    const params = calls[0]!.init.body as URLSearchParams;
+    expect(params.get('From')).toBe('+18005550000');
+    expect(params.get('To')).toBe('+18005551234');
+  });
+});
+
+describe('v0.6.6 — conferences.list date filters', () => {
+  it('sends DateCreated and DateUpdated triple operators', async () => {
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ conferences: [], page: 0, page_size: 50, total: 0, uri: '/x' }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.conferences.list({
+      dateCreated: '2026-05-01',
+      dateCreatedLt: '2026-05-02',
+      dateCreatedGt: '2026-04-30',
+      dateUpdated: '2026-05-10',
+      dateUpdatedLt: '2026-05-11',
+      dateUpdatedGt: '2026-05-09',
+    });
+
+    const url = new URL(calls[0]!.url);
+    expect(url.searchParams.get('DateCreated')).toBe('2026-05-01');
+    expect(url.searchParams.get('DateCreated<')).toBe('2026-05-02');
+    expect(url.searchParams.get('DateCreated>')).toBe('2026-04-30');
+    expect(url.searchParams.get('DateUpdated')).toBe('2026-05-10');
+    expect(url.searchParams.get('DateUpdated<')).toBe('2026-05-11');
+    expect(url.searchParams.get('DateUpdated>')).toBe('2026-05-09');
+  });
+});
+
+describe('v0.6.6 — calls.listNotifications + getNotification', () => {
+  it('listNotifications sends Log and MessageDate filters', async () => {
+    const callSid = 'CA' + 'f'.repeat(32);
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ notifications: [], page: 0, page_size: 50, total: 0 }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.calls.listNotifications(callSid, {
+      Log: 1,
+      messageDate: '2026-05-01',
+      messageDateLt: '2026-05-02',
+      messageDateGt: '2026-04-30',
+    });
+
+    const url = new URL(calls[0]!.url);
+    expect(url.pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls/${callSid}/Notifications.json`,
+    );
+    expect(url.searchParams.get('Log')).toBe('1');
+    expect(url.searchParams.get('MessageDate')).toBe('2026-05-01');
+    expect(url.searchParams.get('MessageDate<')).toBe('2026-05-02');
+    expect(url.searchParams.get('MessageDate>')).toBe('2026-04-30');
+  });
+
+  it('getNotification fetches /Calls/{sid}/Notifications/{nid}', async () => {
+    const callSid = 'CA' + '0'.repeat(32);
+    const nid = 'NO' + '1'.repeat(32);
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ sid: nid, call_sid: callSid, log: 1 }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const n = await c.calls.getNotification(callSid, nid);
+    expect(n.sid).toBe(nid);
+
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls/${callSid}/Notifications/${nid}.json`,
+    );
+  });
+});
+
+describe('v0.6.6 — notifications resource', () => {
+  it('list sends Log and MessageDate filters to /Notifications', async () => {
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ notifications: [], page: 0, page_size: 50, total: 0 }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.notifications.list({
+      Log: 0,
+      messageDate: '2026-05-01',
+    });
+
+    const url = new URL(calls[0]!.url);
+    expect(url.pathname).toBe(`/2010-04-01/Accounts/${ACCOUNT_SID}/Notifications.json`);
+    expect(url.searchParams.get('Log')).toBe('0');
+    expect(url.searchParams.get('MessageDate')).toBe('2026-05-01');
+  });
+
+  it('get fetches /Notifications/{sid}', async () => {
+    const nid = 'NO' + '2'.repeat(32);
+    const { fetch, calls } = fakeFetch([jsonResponse({ sid: nid, log: 1 })]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const n = await c.notifications.get(nid);
+    expect(n.sid).toBe(nid);
+
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/Notifications/${nid}.json`,
+    );
+  });
+});
+
+describe('v0.6.6 — recordings IncludeSoftDeleted', () => {
+  it('list sends IncludeSoftDeleted=true', async () => {
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ recordings: [], page: 0, page_size: 50, total: 0, uri: '/x' }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.recordings.list({ IncludeSoftDeleted: true });
+
+    const url = new URL(calls[0]!.url);
+    expect(url.searchParams.get('IncludeSoftDeleted')).toBe('true');
+  });
+
+  it('get sends IncludeSoftDeleted=true', async () => {
+    const reSid = 'RE' + '2'.repeat(32);
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({
+        sid: reSid,
+        account_sid: ACCOUNT_SID,
+        call_sid: 'CA' + '0'.repeat(32),
+        status: 'deleted',
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.recordings.get(reSid, { IncludeSoftDeleted: true });
+
+    const url = new URL(calls[0]!.url);
+    expect(url.searchParams.get('IncludeSoftDeleted')).toBe('true');
+  });
+});
+
+describe('v0.6.6 — conferences recording sub-resource', () => {
+  it('getRecording, updateRecording, deleteRecording hit the right paths', async () => {
+    const cfSid = 'CF' + '3'.repeat(32);
+    const reSid = 'RE' + '3'.repeat(32);
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({
+        sid: reSid,
+        account_sid: ACCOUNT_SID,
+        call_sid: 'CA' + '0'.repeat(32),
+        conference_sid: cfSid,
+        status: 'completed',
+      }),
+      jsonResponse({
+        sid: reSid,
+        account_sid: ACCOUNT_SID,
+        call_sid: 'CA' + '0'.repeat(32),
+        conference_sid: cfSid,
+        status: 'stopped',
+      }),
+      new Response(null, { status: 204 }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.conferences.getRecording(cfSid, reSid);
+    await c.conferences.updateRecording(cfSid, reSid, { Status: 'stopped' });
+    await c.conferences.deleteRecording(cfSid, reSid);
+
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences/${cfSid}/Recordings/${reSid}.json`,
+    );
+    expect(calls[1]!.init.method).toBe('POST');
+    expect(new URL(calls[1]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences/${cfSid}/Recordings/${reSid}.json`,
+    );
+    const params = calls[1]!.init.body as URLSearchParams;
+    expect(params.get('Status')).toBe('stopped');
+    expect(calls[2]!.init.method).toBe('DELETE');
+    expect(new URL(calls[2]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences/${cfSid}/Recordings/${reSid}.json`,
+    );
+  });
+});
+
+describe('v0.6.6 — incomingPhoneNumbers typed endpoints', () => {
+  it('listLocal/createLocal hit /IncomingPhoneNumbers/Local', async () => {
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ incoming_phone_numbers: [], page: 0, page_size: 50, total: 0 }),
+      jsonResponse(incomingPhoneNumberPayload(), 201),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.incomingPhoneNumbers.listLocal({ FriendlyName: 'support' });
+    await c.incomingPhoneNumbers.createLocal({ PhoneNumber: '+18005551234' });
+
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers/Local.json`,
+    );
+    expect(new URL(calls[0]!.url).searchParams.get('FriendlyName')).toBe('support');
+    expect(calls[1]!.init.method).toBe('POST');
+    expect(new URL(calls[1]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers/Local.json`,
+    );
+  });
+
+  it('listMobile/createMobile hit /IncomingPhoneNumbers/Mobile', async () => {
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ incoming_phone_numbers: [], page: 0, page_size: 50, total: 0 }),
+      jsonResponse(incomingPhoneNumberPayload(), 201),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.incomingPhoneNumbers.listMobile();
+    await c.incomingPhoneNumbers.createMobile({ PhoneNumber: '+18005551234' });
+
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers/Mobile.json`,
+    );
+    expect(new URL(calls[1]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers/Mobile.json`,
+    );
+  });
+
+  it('listTollFree/createTollFree hit /IncomingPhoneNumbers/TollFree', async () => {
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ incoming_phone_numbers: [], page: 0, page_size: 50, total: 0 }),
+      jsonResponse(incomingPhoneNumberPayload(), 201),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.incomingPhoneNumbers.listTollFree();
+    await c.incomingPhoneNumbers.createTollFree({ PhoneNumber: '+18005551234' });
+
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers/TollFree.json`,
+    );
+    expect(new URL(calls[1]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers/TollFree.json`,
+    );
   });
 });

@@ -1,14 +1,17 @@
 import type {
   Conference,
   ConferenceList,
+  CreateParticipantRequest,
   EndConferenceRequest,
   ListCallRecordingsParams,
   ListConferencesParams,
   ListParticipantsParams,
   Participant,
   ParticipantList,
+  Recording,
   RecordingList,
   UpdateParticipantRequest,
+  UpdateRecordingRequest,
 } from '../models/index.js';
 import { BaseResource } from './base.js';
 
@@ -17,7 +20,7 @@ export class ConferencesResource extends BaseResource {
     return this.t.request<ConferenceList>({
       method: 'GET',
       path: this.path('Conferences'),
-      params: { ...params },
+      params: listConferencesToQuery(params),
     });
   }
 
@@ -78,6 +81,17 @@ export class ConferencesResource extends BaseResource {
     });
   }
 
+  createParticipant(
+    conferenceSid: string,
+    body: CreateParticipantRequest,
+  ): Promise<Participant> {
+    return this.t.request<Participant>({
+      method: 'POST',
+      path: this.path('Conferences', conferenceSid, 'Participants'),
+      form: body,
+    });
+  }
+
   // --- Recordings ---
 
   listRecordings(
@@ -90,6 +104,48 @@ export class ConferencesResource extends BaseResource {
       params: listCallRecordingsToQuery(params),
     });
   }
+
+  getRecording(conferenceSid: string, recordingSid: string): Promise<Recording> {
+    return this.t.request<Recording>({
+      method: 'GET',
+      path: this.path('Conferences', conferenceSid, 'Recordings', recordingSid),
+    });
+  }
+
+  updateRecording(
+    conferenceSid: string,
+    recordingSid: string,
+    body: UpdateRecordingRequest,
+  ): Promise<Recording> {
+    return this.t.request<Recording>({
+      method: 'POST',
+      path: this.path('Conferences', conferenceSid, 'Recordings', recordingSid),
+      form: body,
+    });
+  }
+
+  async deleteRecording(conferenceSid: string, recordingSid: string): Promise<void> {
+    await this.t.request<void>({
+      method: 'DELETE',
+      path: this.path('Conferences', conferenceSid, 'Recordings', recordingSid),
+    });
+  }
+}
+
+function listConferencesToQuery(p: ListConferencesParams): Record<string, unknown> {
+  return {
+    FriendlyName: p.FriendlyName,
+    Status: p.Status,
+    DateCreated: p.dateCreated,
+    'DateCreated<': p.dateCreatedLt,
+    'DateCreated>': p.dateCreatedGt,
+    DateUpdated: p.dateUpdated,
+    'DateUpdated<': p.dateUpdatedLt,
+    'DateUpdated>': p.dateUpdatedGt,
+    Page: p.Page,
+    PageSize: p.PageSize,
+    PageToken: p.PageToken,
+  };
 }
 
 function listCallRecordingsToQuery(p: ListCallRecordingsParams): Record<string, unknown> {

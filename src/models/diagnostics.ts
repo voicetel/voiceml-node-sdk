@@ -1,14 +1,5 @@
 import type { HealthFailure } from './common.js';
 
-/** `GET /Calls/{sid}/Notifications` — always an empty list (compat stub). */
-export interface NotificationsList {
-  notifications: unknown[];
-  page: number;
-  page_size: number;
-  total: number;
-  uri?: string;
-}
-
 /** `GET /Calls/{sid}/Events` — always an empty list (compat stub). */
 export interface EventsList {
   events: unknown[];

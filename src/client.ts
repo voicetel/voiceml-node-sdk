@@ -5,6 +5,7 @@ import {
   ConferencesResource,
   DiagnosticsResource,
   IncomingPhoneNumbersResource,
+  NotificationsResource,
   QueuesResource,
   RecordingsResource,
 } from './resources/index.js';
@@ -12,7 +13,7 @@ import { Transport, type TransportOptions } from './transport.js';
 
 /**
  * Constructor options for {@link Client}. Either `apiKey` or `authToken` must be supplied
- * (they're aliases — Twilio-shape SDKs typically expose `authToken`). Passing both throws
+ * (they're aliases — Twilio-compatible SDKs typically expose `authToken`). Passing both throws
  * a {@link ConfigurationError}.
  */
 export interface ClientOptions extends Omit<TransportOptions, 'fetch' | 'apiKey'> {
@@ -52,6 +53,7 @@ export class Client {
   readonly applications: ApplicationsResource;
   readonly recordings: RecordingsResource;
   readonly incomingPhoneNumbers: IncomingPhoneNumbersResource;
+  readonly notifications: NotificationsResource;
   readonly diagnostics: DiagnosticsResource;
   private readonly transport: Transport;
 
@@ -76,6 +78,7 @@ export class Client {
     this.applications = new ApplicationsResource(this.transport);
     this.recordings = new RecordingsResource(this.transport);
     this.incomingPhoneNumbers = new IncomingPhoneNumbersResource(this.transport);
+    this.notifications = new NotificationsResource(this.transport);
     this.diagnostics = new DiagnosticsResource(this.transport);
   }
 
