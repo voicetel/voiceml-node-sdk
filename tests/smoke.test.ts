@@ -15,6 +15,10 @@ import {
   NotImplementedAPIError,
   RateLimitError,
   VERSION,
+  type Call,
+  type Conference,
+  type Recording,
+  type Queue,
   type CreateCallRequest,
   type StartStreamRequest,
 } from '../src/index.js';
@@ -1207,5 +1211,209 @@ describe('v0.6.6 — incomingPhoneNumbers typed endpoints', () => {
     expect(new URL(calls[1]!.url).pathname).toBe(
       `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers/TollFree.json`,
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Pagination: iterate() async generators
+// ---------------------------------------------------------------------------
+
+function conferencePayload(sid: string = 'CF' + '0'.repeat(32)): object {
+  return {
+    sid,
+    account_sid: ACCOUNT_SID,
+    friendly_name: 'room-' + sid.slice(2, 6),
+    status: 'in-progress',
+    api_version: '2010-04-01',
+    uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences/${sid}.json`,
+  };
+}
+
+function recordingPayload(sid: string = 'RE' + '0'.repeat(32)): object {
+  return {
+    sid,
+    account_sid: ACCOUNT_SID,
+    call_sid: 'CA' + '0'.repeat(32),
+    status: 'completed',
+    uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Recordings/${sid}.json`,
+  };
+}
+
+function queuePayload(sid: string = 'QU' + '0'.repeat(32)): object {
+  return {
+    sid,
+    account_sid: ACCOUNT_SID,
+    friendly_name: 'q-' + sid.slice(2, 6),
+    current_size: 0,
+    max_size: 100,
+    average_wait_time: 0,
+    date_created: 'Mon, 19 May 2026 12:00:00 +0000',
+    date_updated: 'Mon, 19 May 2026 12:00:00 +0000',
+    uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Queues/${sid}.json`,
+  };
+}
+
+describe('calls.iterate — pagination', () => {
+  it('yields items across two pages then stops', async () => {
+    const { fetch } = fakeFetch([
+      jsonResponse({
+        calls: [callPayload('CA' + '1'.repeat(32)), callPayload('CA' + '2'.repeat(32))],
+        page: 0,
+        page_size: 2,
+        next_page_uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls.json?Page=1&PageSize=2`,
+        uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls.json?Page=0&PageSize=2`,
+      }),
+      jsonResponse({
+        calls: [callPayload('CA' + '3'.repeat(32))],
+        page: 1,
+        page_size: 2,
+        next_page_uri: null,
+        uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls.json?Page=1&PageSize=2`,
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const items: Call[] = [];
+    for await (const call of c.calls.iterate()) items.push(call);
+
+    expect(items).toHaveLength(3);
+    expect(items[0]!.sid).toBe('CA' + '1'.repeat(32));
+    expect(items[1]!.sid).toBe('CA' + '2'.repeat(32));
+    expect(items[2]!.sid).toBe('CA' + '3'.repeat(32));
+  });
+});
+
+describe('conferences.iterate — pagination', () => {
+  it('yields items across two pages then stops', async () => {
+    const { fetch } = fakeFetch([
+      jsonResponse({
+        conferences: [
+          conferencePayload('CF' + '1'.repeat(32)),
+          conferencePayload('CF' + '2'.repeat(32)),
+        ],
+        page: 0,
+        page_size: 2,
+        next_page_uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences.json?Page=1&PageSize=2`,
+        uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences.json?Page=0&PageSize=2`,
+      }),
+      jsonResponse({
+        conferences: [conferencePayload('CF' + '3'.repeat(32))],
+        page: 1,
+        page_size: 2,
+        next_page_uri: null,
+        uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences.json?Page=1&PageSize=2`,
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const items: Conference[] = [];
+    for await (const conf of c.conferences.iterate()) items.push(conf);
+
+    expect(items).toHaveLength(3);
+    expect(items[0]!.sid).toBe('CF' + '1'.repeat(32));
+    expect(items[1]!.sid).toBe('CF' + '2'.repeat(32));
+    expect(items[2]!.sid).toBe('CF' + '3'.repeat(32));
+  });
+});
+
+describe('recordings.iterate — pagination', () => {
+  it('yields items across two pages then stops', async () => {
+    const { fetch } = fakeFetch([
+      jsonResponse({
+        recordings: [
+          recordingPayload('RE' + '1'.repeat(32)),
+          recordingPayload('RE' + '2'.repeat(32)),
+        ],
+        page: 0,
+        page_size: 2,
+        next_page_uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Recordings.json?Page=1&PageSize=2`,
+        uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Recordings.json?Page=0&PageSize=2`,
+      }),
+      jsonResponse({
+        recordings: [recordingPayload('RE' + '3'.repeat(32))],
+        page: 1,
+        page_size: 2,
+        next_page_uri: null,
+        uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Recordings.json?Page=1&PageSize=2`,
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const items: Recording[] = [];
+    for await (const rec of c.recordings.iterate()) items.push(rec);
+
+    expect(items).toHaveLength(3);
+    expect(items[0]!.sid).toBe('RE' + '1'.repeat(32));
+    expect(items[1]!.sid).toBe('RE' + '2'.repeat(32));
+    expect(items[2]!.sid).toBe('RE' + '3'.repeat(32));
+  });
+});
+
+describe('queues.iterate — pagination', () => {
+  it('yields items across two pages then stops', async () => {
+    const { fetch } = fakeFetch([
+      jsonResponse({
+        queues: [queuePayload('QU' + '1'.repeat(32)), queuePayload('QU' + '2'.repeat(32))],
+        page: 0,
+        page_size: 2,
+        next_page_uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Queues.json?Page=1&PageSize=2`,
+        uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Queues.json?Page=0&PageSize=2`,
+      }),
+      jsonResponse({
+        queues: [queuePayload('QU' + '3'.repeat(32))],
+        page: 1,
+        page_size: 2,
+        next_page_uri: null,
+        uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Queues.json?Page=1&PageSize=2`,
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const items: Queue[] = [];
+    for await (const q of c.queues.iterate()) items.push(q);
+
+    expect(items).toHaveLength(3);
+    expect(items[0]!.sid).toBe('QU' + '1'.repeat(32));
+    expect(items[1]!.sid).toBe('QU' + '2'.repeat(32));
+    expect(items[2]!.sid).toBe('QU' + '3'.repeat(32));
+  });
+});
+
+describe('iterate — single page edge case', () => {
+  it('stops after one page when next_page_uri is null', async () => {
+    const { fetch } = fakeFetch([
+      jsonResponse({
+        calls: [callPayload('CA' + 'a'.repeat(32))],
+        page: 0,
+        page_size: 50,
+        next_page_uri: null,
+        uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls.json?Page=0&PageSize=50`,
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const items: Call[] = [];
+    for await (const call of c.calls.iterate()) items.push(call);
+
+    expect(items).toHaveLength(1);
+    expect(items[0]!.sid).toBe('CA' + 'a'.repeat(32));
+  });
+
+  it('yields nothing when the single page is empty', async () => {
+    const { fetch } = fakeFetch([
+      jsonResponse({
+        calls: [],
+        page: 0,
+        page_size: 50,
+        next_page_uri: null,
+        uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls.json?Page=0&PageSize=50`,
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const items: Call[] = [];
+    for await (const call of c.calls.iterate()) items.push(call);
+
+    expect(items).toHaveLength(0);
   });
 });

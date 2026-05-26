@@ -82,6 +82,10 @@ export class Client {
     this.diagnostics = new DiagnosticsResource(this.transport);
   }
 
+  close(): void {
+    this.transport.close();
+  }
+
   get accountSid(): string {
     return this.transport.accountSid;
   }

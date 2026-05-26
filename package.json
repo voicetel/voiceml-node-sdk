@@ -13,7 +13,11 @@
       "require": "./dist/cjs/index.cjs"
     }
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "npm run build:esm && npm run build:cjs && npm run build:types",
     "build:esm": "tsc -p tsconfig.esm.json",
@@ -27,7 +31,14 @@
   "engines": {
     "node": ">=18.17"
   },
-  "keywords": ["voiceml", "voicetel", "twilio-compatible", "telephony", "voice", "amd"],
+  "keywords": [
+    "voiceml",
+    "voicetel",
+    "twilio-compatible",
+    "telephony",
+    "voice",
+    "amd"
+  ],
   "author": "VoiceTel <support@voicetel.com>",
   "license": "SEE LICENSE IN LICENSE",
   "homepage": "https://voiceml.voicetel.com",
@@ -42,9 +53,10 @@
     "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
+    "@vitest/coverage-v8": "^4.1.7",
     "eslint": "^8.57.0",
     "msw": "^2.4.0",
     "typescript": "^5.4.0",
-    "vitest": "^1.6.0"
+    "vitest": "^4.1.7"
   }
 }

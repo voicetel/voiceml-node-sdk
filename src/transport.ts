@@ -182,6 +182,11 @@ export class Transport {
     return h;
   }
 
+  close(): void {
+    // No-op — fetch has no connection lifecycle. Provided for API parity
+    // with Python/Ruby/C# SDKs so callers can use a uniform cleanup pattern.
+  }
+
   private async fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);

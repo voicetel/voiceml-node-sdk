@@ -24,6 +24,16 @@ export class ConferencesResource extends BaseResource {
     });
   }
 
+  async *iterate(params: ListConferencesParams = {}): AsyncGenerator<Conference, void, void> {
+    let page = params.Page ?? 0;
+    while (true) {
+      const chunk = await this.list({ ...params, Page: page });
+      for (const item of chunk.conferences) yield item;
+      if (!chunk.next_page_uri || chunk.conferences.length === 0) return;
+      page += 1;
+    }
+  }
+
   get(conferenceSid: string): Promise<Conference> {
     return this.t.request<Conference>({
       method: 'GET',

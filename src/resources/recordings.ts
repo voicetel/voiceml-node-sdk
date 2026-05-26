@@ -16,6 +16,16 @@ export class RecordingsResource extends BaseResource {
     });
   }
 
+  async *iterate(params: ListRecordingsParams = {}): AsyncGenerator<Recording, void, void> {
+    let page = params.Page ?? 0;
+    while (true) {
+      const chunk = await this.list({ ...params, Page: page });
+      for (const item of chunk.recordings) yield item;
+      if (!chunk.next_page_uri || chunk.recordings.length === 0) return;
+      page += 1;
+    }
+  }
+
   get(recordingSid: string, params: GetRecordingParams = {}): Promise<Recording> {
     return this.t.request<Recording>({
       method: 'GET',

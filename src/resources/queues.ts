@@ -24,6 +24,16 @@ export class QueuesResource extends BaseResource {
     });
   }
 
+  async *iterate(params: ListPageParams = {}): AsyncGenerator<Queue, void, void> {
+    let page = params.Page ?? 0;
+    while (true) {
+      const chunk = await this.list({ ...params, Page: page });
+      for (const item of chunk.queues) yield item;
+      if (!chunk.next_page_uri || chunk.queues.length === 0) return;
+      page += 1;
+    }
+  }
+
   get(queueSid: string): Promise<Queue> {
     return this.t.request<Queue>({ method: 'GET', path: this.path('Queues', queueSid) });
   }
