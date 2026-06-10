@@ -9,7 +9,7 @@ export interface SiprecSession {
   name?: string;
   connector_name?: string;
   status: SiprecStatus;
-  api_version: string;
+  api_version?: string;
   uri: string;
   date_created?: string;
   date_updated?: string;

@@ -8,7 +8,7 @@ export interface Stream {
   call_sid: string;
   name?: string;
   status: StreamStatus;
-  api_version: string;
+  api_version?: string;
   uri: string;
   date_created?: string;
   date_updated?: string;

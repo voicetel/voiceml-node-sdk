@@ -11,7 +11,7 @@ export interface CallTranscription {
   language_code?: string;
   transcription_engine?: TranscriptionEngine;
   status: TranscriptionStatus;
-  api_version: string;
+  api_version?: string;
   uri: string;
   date_created?: string;
   date_updated?: string;
