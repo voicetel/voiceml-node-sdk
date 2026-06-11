@@ -21,6 +21,14 @@ export const DEFAULT_USER_AGENT = `voiceml-node/${VERSION}`;
 
 const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
 
+// Linear-time trailing-slash strip. Equivalent to `.replace(/\/+$/, '')` but
+// without the polynomial-backtracking shape CodeQL flags (`js/polynomial-redos`).
+function stripTrailingSlashes(s: string): string {
+  let end = s.length;
+  while (end > 0 && s.charCodeAt(end - 1) === 47 /* '/' */) end--;
+  return end === s.length ? s : s.slice(0, end);
+}
+
 export interface TransportOptions {
   /** Twilio-format AccountSid: literal "AC" + 32 hex chars. */
   accountSid: string;
@@ -67,7 +75,7 @@ export class Transport {
     }
     this.accountSid = options.accountSid;
     this.apiKey = options.apiKey;
-    this.baseUrl = (options.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, '');
+    this.baseUrl = stripTrailingSlashes(options.baseUrl ?? DEFAULT_BASE_URL);
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.maxRetries = options.maxRetries ?? DEFAULT_MAX_RETRIES;
     this.userAgent = options.userAgent ?? DEFAULT_USER_AGENT;
