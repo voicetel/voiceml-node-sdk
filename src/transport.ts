@@ -238,6 +238,7 @@ async function parseResponse<T>(response: Response): Promise<T> {
       throw new ApiError(`non-JSON success response: ${text.slice(0, 200)}`, {
         statusCode: response.status,
         body: text,
+        cause: err,
       });
     }
   }

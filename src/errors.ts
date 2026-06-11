@@ -19,6 +19,8 @@ export interface ApiErrorOptions {
   code?: number | string | null;
   body?: unknown;
   moreInfo?: string | null;
+  /** Underlying error this one wraps, surfaced via the standard `Error.cause`. */
+  cause?: unknown;
 }
 
 export class ApiError extends VoiceMLError {
@@ -30,7 +32,7 @@ export class ApiError extends VoiceMLError {
   readonly moreInfo: string | null;
 
   constructor(message: string, options: ApiErrorOptions) {
-    super(message);
+    super(message, options.cause === undefined ? undefined : { cause: options.cause });
     this.statusCode = options.statusCode;
     this.code = options.code ?? null;
     this.body = options.body ?? null;
