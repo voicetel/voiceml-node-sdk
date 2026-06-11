@@ -288,7 +288,10 @@ describe.skipIf(!loaded)('Twilio response-shape conformance', () => {
       try {
         parsed = JSON.parse(body);
       } catch (err) {
-        throw new Error(`${entry.operation_id}/${entry.example_name}: JSON parse failed: ${(err as Error).message}`);
+        throw new Error(
+          `${entry.operation_id}/${entry.example_name}: JSON parse failed: ${(err as Error).message}`,
+          { cause: err },
+        );
       }
       validateShape(parsed, picked.shape, `${entry.operation_id}/${entry.example_name}`);
     },
