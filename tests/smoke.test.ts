@@ -74,7 +74,7 @@ afterEach(() => {
 
 describe('module surface', () => {
   it('exports the right version', () => {
-    expect(VERSION).toBe('0.6.6');
+    expect(VERSION).toBe('0.7.0');
   });
 
   it('requires accountSid + apiKey', () => {
@@ -90,6 +90,7 @@ describe('module surface', () => {
     expect(c.applications).toBeDefined();
     expect(c.recordings).toBeDefined();
     expect(c.incomingPhoneNumbers).toBeDefined();
+    expect(c.messages).toBeDefined();
     expect(c.notifications).toBeDefined();
     expect(c.diagnostics).toBeDefined();
     expect(c.accountSid).toBe(ACCOUNT_SID);
@@ -1415,5 +1416,217 @@ describe('iterate — single page edge case', () => {
     for await (const call of c.calls.iterate()) items.push(call);
 
     expect(items).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// v0.7.0: Messages resource (SMS — Twilio-compatible /Messages surface).
+// ---------------------------------------------------------------------------
+
+function messagePayload(sid: string = 'SM' + '0'.repeat(32)) {
+  return {
+    sid,
+    account_sid: ACCOUNT_SID,
+    api_version: '2010-04-01',
+    to: '+18005551234',
+    from: '+18005550000',
+    body: 'hello',
+    status: 'sent',
+    num_segments: '1',
+    num_media: '0',
+    direction: 'outbound-api',
+    price: null,
+    price_unit: null,
+    error_code: null,
+    error_message: null,
+    messaging_service_sid: null,
+    date_created: 'Mon, 19 May 2026 12:00:00 +0000',
+    date_updated: 'Mon, 19 May 2026 12:00:00 +0000',
+    date_sent: 'Mon, 19 May 2026 12:00:01 +0000',
+    uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Messages/${sid}.json`,
+  };
+}
+
+describe('v0.7.0 — messages.create', () => {
+  it('POSTs to /Messages.json with To/Body/From URL-encoded form body', async () => {
+    const { fetch, calls } = fakeFetch([jsonResponse(messagePayload(), 201)]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const msg = await c.messages.create({
+      To: '+18005551234',
+      Body: 'hello',
+      From: '+18005550000',
+    });
+    expect(msg.sid.startsWith('SM')).toBe(true);
+    expect(msg.num_segments).toBe('1');
+    expect(msg.num_media).toBe('0');
+    expect(msg.error_code).toBeNull();
+    expect(msg.price).toBeNull();
+
+    expect(calls).toHaveLength(1);
+    const [{ url, init }] = calls;
+    expect(url).toBe(`${BASE}/2010-04-01/Accounts/${ACCOUNT_SID}/Messages.json`);
+    expect(init.method).toBe('POST');
+
+    const params = init.body as URLSearchParams;
+    expect(params).toBeInstanceOf(URLSearchParams);
+    expect(params.get('To')).toBe('+18005551234');
+    expect(params.get('Body')).toBe('hello');
+    expect(params.get('From')).toBe('+18005550000');
+  });
+});
+
+describe('v0.7.0 — messages.update', () => {
+  it('sends Body= (empty string) to redact', async () => {
+    const sid = 'SM' + '1'.repeat(32);
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ ...messagePayload(sid), body: '' }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const msg = await c.messages.update(sid, { Body: '' });
+    expect(msg.body).toBe('');
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.init.method).toBe('POST');
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/Messages/${sid}.json`,
+    );
+
+    const params = calls[0]!.init.body as URLSearchParams;
+    // Empty-string Body must be sent on the wire — Twilio's documented redaction signal.
+    expect(params.has('Body')).toBe(true);
+    expect(params.get('Body')).toBe('');
+  });
+});
+
+describe('v0.7.0 — messages.list', () => {
+  it('sends DateSent / DateSent< / DateSent> and PageToken', async () => {
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({
+        messages: [messagePayload()],
+        page: 0,
+        page_size: 50,
+        total: 1,
+        next_page_uri: null,
+        uri: '/Messages',
+      }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const result = await c.messages.list({
+      dateSent: '2026-05-01',
+      dateSentLt: '2026-05-02',
+      dateSentGt: '2026-04-30',
+      PageToken: 'cursor-xyz',
+      PageSize: 25,
+    });
+    expect(result.messages).toHaveLength(1);
+
+    const url = new URL(calls[0]!.url);
+    expect(url.pathname).toBe(`/2010-04-01/Accounts/${ACCOUNT_SID}/Messages.json`);
+    expect(url.searchParams.get('DateSent')).toBe('2026-05-01');
+    expect(url.searchParams.get('DateSent<')).toBe('2026-05-02');
+    expect(url.searchParams.get('DateSent>')).toBe('2026-04-30');
+    expect(url.searchParams.get('PageToken')).toBe('cursor-xyz');
+    expect(url.searchParams.get('PageSize')).toBe('25');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// v0.7.0: Payments — POST /Calls/{sid}/Payments and /Payments/{sid}.
+// ---------------------------------------------------------------------------
+
+function paymentPayload(sid: string = 'PY' + '0'.repeat(32), callSid?: string) {
+  return {
+    sid,
+    account_sid: ACCOUNT_SID,
+    call_sid: callSid ?? 'CA' + '0'.repeat(32),
+    api_version: '2010-04-01',
+    date_created: 'Mon, 19 May 2026 12:00:00 +0000',
+    date_updated: 'Mon, 19 May 2026 12:00:00 +0000',
+    uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls/${callSid ?? 'CA' + '0'.repeat(32)}/Payments/${sid}.json`,
+  };
+}
+
+describe('v0.7.0 — calls.startPayment', () => {
+  it('POSTs to /Calls/{sid}/Payments.json with the encoded fields', async () => {
+    const callSid = 'CA' + '5'.repeat(32);
+    const paySid = 'PY' + '1'.repeat(32);
+    const { fetch, calls } = fakeFetch([
+      jsonResponse(paymentPayload(paySid, callSid), 201),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    const pay = await c.calls.startPayment(callSid, {
+      IdempotencyKey: 'idemp-1',
+      ChargeAmount: '12.34',
+      Currency: 'USD',
+      PaymentMethod: 'credit-card',
+      TokenType: 'one-time',
+      BankAccountType: 'consumer-checking',
+      Input: 'dtmf',
+      PostalCode: true,
+      SecurityCode: false,
+      Timeout: 7,
+      MinPostalCodeLength: 5,
+      ValidCardTypes: 'visa mastercard',
+      Confirmation: true,
+    });
+    expect(pay.sid.startsWith('PY')).toBe(true);
+    expect(pay.call_sid).toBe(callSid);
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.init.method).toBe('POST');
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls/${callSid}/Payments.json`,
+    );
+
+    const params = calls[0]!.init.body as URLSearchParams;
+    expect(params.get('IdempotencyKey')).toBe('idemp-1');
+    expect(params.get('ChargeAmount')).toBe('12.34');
+    expect(params.get('Currency')).toBe('USD');
+    expect(params.get('PaymentMethod')).toBe('credit-card');
+    expect(params.get('TokenType')).toBe('one-time');
+    expect(params.get('BankAccountType')).toBe('consumer-checking');
+    expect(params.get('Input')).toBe('dtmf');
+    // Booleans must serialise as the literal strings 'true' / 'false'.
+    expect(params.get('PostalCode')).toBe('true');
+    expect(params.get('SecurityCode')).toBe('false');
+    expect(params.get('Confirmation')).toBe('true');
+    expect(params.get('Timeout')).toBe('7');
+    expect(params.get('MinPostalCodeLength')).toBe('5');
+    expect(params.get('ValidCardTypes')).toBe('visa mastercard');
+  });
+});
+
+describe('v0.7.0 — calls.updatePayment', () => {
+  it('first sends Status=complete, then Capture=security-code (two separate calls)', async () => {
+    const callSid = 'CA' + '6'.repeat(32);
+    const paySid = 'PY' + '2'.repeat(32);
+    const { fetch, calls } = fakeFetch([
+      jsonResponse(paymentPayload(paySid, callSid), 202),
+      jsonResponse(paymentPayload(paySid, callSid), 202),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.calls.updatePayment(callSid, paySid, { Status: 'complete' });
+    await c.calls.updatePayment(callSid, paySid, { Capture: 'security-code' });
+
+    expect(calls).toHaveLength(2);
+
+    const path = `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls/${callSid}/Payments/${paySid}.json`;
+
+    expect(calls[0]!.init.method).toBe('POST');
+    expect(new URL(calls[0]!.url).pathname).toBe(path);
+    const p0 = calls[0]!.init.body as URLSearchParams;
+    expect(p0.get('Status')).toBe('complete');
+    expect(p0.has('Capture')).toBe(false);
+
+    expect(calls[1]!.init.method).toBe('POST');
+    expect(new URL(calls[1]!.url).pathname).toBe(path);
+    const p1 = calls[1]!.init.body as URLSearchParams;
+    expect(p1.get('Capture')).toBe('security-code');
+    expect(p1.has('Status')).toBe(false);
   });
 });

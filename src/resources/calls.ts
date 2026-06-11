@@ -1,8 +1,10 @@
 import type {
   Call,
   CallList,
+  CallPayment,
   CallTranscription,
   CreateCallRequest,
+  CreatePaymentParams,
   EventsList,
   ListCallNotificationsParams,
   ListCallsParams,
@@ -24,6 +26,7 @@ import type {
   StreamList,
   TranscriptionList,
   UpdateCallRequest,
+  UpdatePaymentParams,
   UpdateRecordingRequest,
 } from '../models/index.js';
 import { BaseResource } from './base.js';
@@ -209,6 +212,38 @@ export class CallsResource extends BaseResource {
       method: 'POST',
       path: this.path('Calls', callSid, 'Transcriptions', transcriptionSid),
       form: body,
+    });
+  }
+
+  // --- Payments (<Pay> REST companion) ---
+
+  /**
+   * Begin a `<Pay>` session on the live call. Returns 201 with the freshly-minted
+   * `CallPayment`. Returns 403 when the tenant is not `pay_enabled` or has no
+   * `stripe_secret_key` configured.
+   */
+  startPayment(callSid: string, params: CreatePaymentParams = {}): Promise<CallPayment> {
+    return this.t.request<CallPayment>({
+      method: 'POST',
+      path: this.path('Calls', callSid, 'Payments'),
+      form: params,
+    });
+  }
+
+  /**
+   * Advance or terminate an existing Pay session. `Status=complete` captures the collected
+   * fields; `Status=cancel` aborts the session. `Capture=...` tells the runtime which input
+   * the user is about to type next.
+   */
+  updatePayment(
+    callSid: string,
+    paymentSid: string,
+    params: UpdatePaymentParams,
+  ): Promise<CallPayment> {
+    return this.t.request<CallPayment>({
+      method: 'POST',
+      path: this.path('Calls', callSid, 'Payments', paymentSid),
+      form: params,
     });
   }
 

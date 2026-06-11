@@ -5,6 +5,7 @@ import {
   ConferencesResource,
   DiagnosticsResource,
   IncomingPhoneNumbersResource,
+  MessagesResource,
   NotificationsResource,
   QueuesResource,
   RecordingsResource,
@@ -53,6 +54,7 @@ export class Client {
   readonly applications: ApplicationsResource;
   readonly recordings: RecordingsResource;
   readonly incomingPhoneNumbers: IncomingPhoneNumbersResource;
+  readonly messages: MessagesResource;
   readonly notifications: NotificationsResource;
   readonly diagnostics: DiagnosticsResource;
   private readonly transport: Transport;
@@ -78,6 +80,7 @@ export class Client {
     this.applications = new ApplicationsResource(this.transport);
     this.recordings = new RecordingsResource(this.transport);
     this.incomingPhoneNumbers = new IncomingPhoneNumbersResource(this.transport);
+    this.messages = new MessagesResource(this.transport);
     this.notifications = new NotificationsResource(this.transport);
     this.diagnostics = new DiagnosticsResource(this.transport);
   }
