@@ -1,0 +1,46 @@
+name: Publish to npm
+
+# Publishes the voiceml package to npm on every v* tag push.
+# Uses an automation token stored as the NPM_TOKEN secret at
+# https://github.com/voicetel/voiceml-node-sdk/settings/secrets/actions
+#
+# To create the token:
+#   1. Sign in at npmjs.com as the publisher account.
+#   2. Account settings → Access Tokens → Generate New Token → Automation.
+#   3. Copy the token into the NPM_TOKEN repo secret.
+#
+# Provenance is enabled (`--provenance`) so the published artifact carries
+# a cryptographic attestation of the GitHub Actions run that produced it.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write   # required for `npm publish --provenance`
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish (with provenance)
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
