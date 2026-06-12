@@ -34,7 +34,7 @@ export interface ClientOptions extends Omit<TransportOptions, 'fetch' | 'apiKey'
  * shape so existing Twilio code ports verbatim.
  *
  * ```ts
- * import { Client } from 'voiceml';
+ * import { Client } from '@voicetel.com/voiceml';
  *
  * const c = new Client({ accountSid: 'AC…', apiKey: '…' });
  * // or, Twilio-style:
