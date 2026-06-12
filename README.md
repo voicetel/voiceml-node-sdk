@@ -68,7 +68,7 @@ The official TypeScript / Node client for the [VoiceML REST API](https://voicete
 ## 🚀 Installation
 
 ```bash
-npm install voiceml
+npm install @voicetel.com/voiceml
 # or
 pnpm add voiceml
 # or
@@ -80,7 +80,7 @@ Requires Node.js 18.17 or later (for the global `fetch` API). Both ESM and CJS e
 ## 🏁 Quickstart
 
 ```ts
-import { Client } from 'voiceml';
+import { Client } from '@voicetel.com/voiceml';
 
 const c = new Client({ accountSid: 'AC…', apiKey: '…' });
 
@@ -103,7 +103,7 @@ for await (const completed of c.calls.iterate({ Status: 'completed', PageSize: 2
 Every endpoint uses **HTTP Basic** with your `AccountSid` as the username and your per-tenant API key as the password — identical to Twilio's auth shape, so credentials issued for Twilio code work here unchanged.
 
 ```ts
-import { Client } from 'voiceml';
+import { Client } from '@voicetel.com/voiceml';
 
 const c = new Client({ accountSid: 'AC…', apiKey: '…' });
 const health = await c.diagnostics.health(); // uses your AccountSid + key on every call
@@ -132,7 +132,7 @@ import {
   Client,
   type CreateCallParams,
   type CreatePaymentParams,
-} from 'voiceml';
+} from '@voicetel.com/voiceml';
 
 const c = new Client({ accountSid: 'AC…', apiKey: '…' });
 
@@ -170,7 +170,7 @@ Every non-2xx response raises a subclass of `ApiError`, keyed off HTTP status:
 | other | `ApiError` |
 
 ```ts
-import { Client, NotFoundError, RateLimitError } from 'voiceml';
+import { Client, NotFoundError, RateLimitError } from '@voicetel.com/voiceml';
 
 const c = new Client({ accountSid: 'AC…', apiKey: '…' });
 
@@ -216,7 +216,7 @@ import twilio from 'twilio';
 const client = twilio('AC…', '<auth_token>');
 
 // After — VoiceML (Twilio-compatible)
-import { Client } from 'voiceml';
+import { Client } from '@voicetel.com/voiceml';
 const client = new Client({ accountSid: 'AC…', apiKey: '<api_key>' });
 ```
 
@@ -270,7 +270,7 @@ VOICEML_CONFORMANCE_FIXTURES=/path/to/twilio-conformance-fixtures/fixtures \
 - **Reference docs:** [voicetel.com/docs/api/v0.6/voiceml/](https://voicetel.com/docs/api/v0.6/voiceml/)
 - **Validator:** [voicetel.com/voiceml/validator/](https://voicetel.com/voiceml/validator/)
 - **SDK catalogue:** [voicetel.com/docs/voiceml-sdks/](https://voicetel.com/docs/voiceml-sdks/)
-- **Type definitions:** every wire shape is exported from `voiceml` — `import { type Call, type Message, type Queue } from 'voiceml'`.
+- **Type definitions:** every wire shape is exported from `@voicetel.com/voiceml` — `import { type Call, type Message, type Queue } from '@voicetel.com/voiceml'`.
 
 ## 🙌 Contributors
 
