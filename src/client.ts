@@ -9,6 +9,7 @@ import {
   NotificationsResource,
   QueuesResource,
   RecordingsResource,
+  SipResource,
 } from './resources/index.js';
 import { Transport, type TransportOptions } from './transport.js';
 
@@ -56,6 +57,7 @@ export class Client {
   readonly incomingPhoneNumbers: IncomingPhoneNumbersResource;
   readonly messages: MessagesResource;
   readonly notifications: NotificationsResource;
+  readonly sip: SipResource;
   readonly diagnostics: DiagnosticsResource;
   private readonly transport: Transport;
 
@@ -82,6 +84,7 @@ export class Client {
     this.incomingPhoneNumbers = new IncomingPhoneNumbersResource(this.transport);
     this.messages = new MessagesResource(this.transport);
     this.notifications = new NotificationsResource(this.transport);
+    this.sip = new SipResource(this.transport);
     this.diagnostics = new DiagnosticsResource(this.transport);
   }
 

@@ -7,3 +7,16 @@ export { MessagesResource } from './messages.js';
 export { NotificationsResource } from './notifications.js';
 export { QueuesResource } from './queues.js';
 export { RecordingsResource } from './recordings.js';
+export {
+  SipResource,
+  SipDomainsResource,
+  SipCredentialListsResource,
+  SipCredentialsResource,
+  SipIpAccessControlListsResource,
+  SipIpAddressesResource,
+  SipDomainCredentialListMappingsResource,
+  SipDomainIpAccessControlListMappingsResource,
+  SipDomainAuthResource,
+  SipDomainAuthCallsResource,
+  SipDomainAuthRegistrationsResource,
+} from './sip.js';
