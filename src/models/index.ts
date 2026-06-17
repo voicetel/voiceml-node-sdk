@@ -9,6 +9,7 @@ export * from './notifications.js';
 export * from './payments.js';
 export * from './queues.js';
 export * from './recordings.js';
+export * from './routes_v2.js';
 export * from './sip.js';
 export * from './siprec.js';
 export * from './streams.js';

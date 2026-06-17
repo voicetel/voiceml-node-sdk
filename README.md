@@ -2,7 +2,7 @@
 
 The official TypeScript / Node client for the [VoiceML REST API](https://voicetel.com/docs/api/v0.7/voiceml/) — Twilio-compatible outbound voice and answering-machine-detection from VoiceTel, with end-to-end TypeScript types and dual ESM / CJS distribution.
 
-![Version](https://img.shields.io/badge/version-0.8.0-blue)
+![Version](https://img.shields.io/badge/version-0.8.1-blue)
 ![Node](https://img.shields.io/badge/node-%E2%89%A518.17-blue)
 ![License](https://img.shields.io/badge/license-MIT%20%2B%20Commons%20Clause-green)
 ![Tests](https://img.shields.io/badge/tests-65%20unit-brightgreen)
@@ -55,10 +55,11 @@ The official TypeScript / Node client for the [VoiceML REST API](https://voicete
 - **IncomingPhoneNumbers** — list, fetch, update.
 - **Notifications** — fetch, list.
 - **SIP** — SIP Trunking: Domains (CRUD), CredentialLists + Credentials (CRUD), IpAccessControlLists + IpAddresses (CRUD), Domain↔ACL/CredentialList mappings (historical, Auth/Calls, Auth/Registrations namespaces).
+- **Routes V2** — Twilio Inbound Processing Region API: `client.routesV2.sipDomains.fetch(name)` / `update(name, { VoiceRegion, FriendlyName })`.
 - **Diagnostics** — `/health` deep probe, OpenAPI spec.
 
 ### 🧪 Tested
-- **80 unit tests** with a mocked transport (`vitest` + fetch stub) — request shapes, response parsing, error mapping, retry behavior, and pagination iterators all covered.
+- **84 unit tests** with a mocked transport (`vitest` + fetch stub) — request shapes, response parsing, error mapping, retry behavior, and pagination iterators all covered.
 - **Structural conformance harness** in `tests/integration/conformance.test.ts` validates SDK interfaces against canonical Twilio response fixtures — opt-in via `VOICEML_CONFORMANCE_FIXTURES`, so CI stays fast.
 
 ### 📦 Clean Distribution

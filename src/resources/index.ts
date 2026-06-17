@@ -7,6 +7,7 @@ export { MessagesResource } from './messages.js';
 export { NotificationsResource } from './notifications.js';
 export { QueuesResource } from './queues.js';
 export { RecordingsResource } from './recordings.js';
+export { RoutesV2Resource, RoutesV2SipDomainsResource } from './routes_v2.js';
 export {
   SipResource,
   SipDomainsResource,
