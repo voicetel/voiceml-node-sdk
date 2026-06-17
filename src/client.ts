@@ -9,6 +9,7 @@ import {
   NotificationsResource,
   QueuesResource,
   RecordingsResource,
+  RoutesV2Resource,
   SipResource,
 } from './resources/index.js';
 import { Transport, type TransportOptions } from './transport.js';
@@ -58,6 +59,7 @@ export class Client {
   readonly messages: MessagesResource;
   readonly notifications: NotificationsResource;
   readonly sip: SipResource;
+  readonly routesV2: RoutesV2Resource;
   readonly diagnostics: DiagnosticsResource;
   private readonly transport: Transport;
 
@@ -85,6 +87,7 @@ export class Client {
     this.messages = new MessagesResource(this.transport);
     this.notifications = new NotificationsResource(this.transport);
     this.sip = new SipResource(this.transport);
+    this.routesV2 = new RoutesV2Resource(this.transport);
     this.diagnostics = new DiagnosticsResource(this.transport);
   }
 
