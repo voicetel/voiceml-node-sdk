@@ -225,4 +225,7 @@ export interface ListSipPageParams {
   Page?: number;
   PageSize?: number;
   PageToken?: string;
+  // Index signature so the interface satisfies the transport's
+  // `params: Record<string, unknown>` constraint without a cast.
+  [key: string]: unknown;
 }
