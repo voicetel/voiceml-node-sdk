@@ -74,7 +74,7 @@ afterEach(() => {
 
 describe('module surface', () => {
   it('exports the right version', () => {
-    expect(VERSION).toBe('0.7.1');
+    expect(VERSION).toBe('0.8.0');
   });
 
   it('requires accountSid + apiKey', () => {
@@ -92,6 +92,12 @@ describe('module surface', () => {
     expect(c.incomingPhoneNumbers).toBeDefined();
     expect(c.messages).toBeDefined();
     expect(c.notifications).toBeDefined();
+    expect(c.sip).toBeDefined();
+    expect(c.sip.domains).toBeDefined();
+    expect(c.sip.credentialLists).toBeDefined();
+    expect(c.sip.ipAccessControlLists).toBeDefined();
+    expect(c.sip.domains.auth.calls).toBeDefined();
+    expect(c.sip.domains.auth.registrations).toBeDefined();
     expect(c.diagnostics).toBeDefined();
     expect(c.accountSid).toBe(ACCOUNT_SID);
     expect(c.baseUrl).toBe(BASE);
