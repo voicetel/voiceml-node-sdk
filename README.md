@@ -1,6 +1,6 @@
 # 📞 VoiceML TypeScript SDK
 
-The official TypeScript / Node client for the [VoiceML REST API](https://voicetel.com/docs/api/v0.7/voiceml/) — Twilio-compatible outbound voice and answering-machine-detection from VoiceTel, with end-to-end TypeScript types and dual ESM / CJS distribution.
+The official TypeScript / Node client for the [VoiceML REST API](https://voicetel.com/docs/api/v0.8/voiceml/) — Twilio-compatible outbound voice and answering-machine-detection from VoiceTel, with end-to-end TypeScript types and dual ESM / CJS distribution.
 
 ![Version](https://img.shields.io/badge/version-0.8.1-blue)
 ![Node](https://img.shields.io/badge/node-%E2%89%A518.17-blue)
@@ -111,7 +111,7 @@ const c = new Client({ accountSid: 'AC…', apiKey: '…' });
 const health = await c.diagnostics.health(); // uses your AccountSid + key on every call
 ```
 
-> Don't have credentials yet? See **[voicetel.com/docs/api/v0.7/voiceml/](https://voicetel.com/docs/api/v0.7/voiceml/)** for issuance and rotation.
+> Don't have credentials yet? See **[voicetel.com/docs/api/v0.8/voiceml/](https://voicetel.com/docs/api/v0.8/voiceml/)** for issuance and rotation.
 
 ## 🗺️ Resource Reference
 
@@ -269,7 +269,7 @@ VOICEML_CONFORMANCE_FIXTURES=/path/to/twilio-conformance-fixtures/fixtures \
 
 ## 📖 API Documentation
 
-- **Reference docs:** [voicetel.com/docs/api/v0.7/voiceml/](https://voicetel.com/docs/api/v0.7/voiceml/)
+- **Reference docs:** [voicetel.com/docs/api/v0.8/voiceml/](https://voicetel.com/docs/api/v0.8/voiceml/)
 - **Validator:** [voicetel.com/voiceml/validator/](https://voicetel.com/voiceml/validator/)
 - **SDK catalogue:** [voicetel.com/docs/voiceml-sdks/](https://voicetel.com/docs/voiceml-sdks/)
 - **Type definitions:** every wire shape is exported from `@voicetel.com/voiceml` — `import { type Call, type Message, type Queue } from '@voicetel.com/voiceml'`.
