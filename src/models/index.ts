@@ -1,7 +1,9 @@
 export * from './applications.js';
+export * from './assistants_v1.js';
 export * from './calls.js';
 export * from './common.js';
 export * from './conferences.js';
+export * from './conversations_v1.js';
 export * from './diagnostics.js';
 export * from './incoming_phone_numbers.js';
 export * from './messages.js';
@@ -14,3 +16,4 @@ export * from './sip.js';
 export * from './siprec.js';
 export * from './streams.js';
 export * from './transcriptions.js';
+export * from './voice_v1.js';
