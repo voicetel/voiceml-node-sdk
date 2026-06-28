@@ -1,8 +1,10 @@
 import { ConfigurationError } from './errors.js';
 import {
   ApplicationsResource,
+  AssistantsV1Resource,
   CallsResource,
   ConferencesResource,
+  ConversationsV1Resource,
   DiagnosticsResource,
   IncomingPhoneNumbersResource,
   MessagesResource,
@@ -11,6 +13,7 @@ import {
   RecordingsResource,
   RoutesV2Resource,
   SipResource,
+  VoiceV1Resource,
 } from './resources/index.js';
 import { Transport, type TransportOptions } from './transport.js';
 
@@ -60,6 +63,9 @@ export class Client {
   readonly notifications: NotificationsResource;
   readonly sip: SipResource;
   readonly routesV2: RoutesV2Resource;
+  readonly voiceV1: VoiceV1Resource;
+  readonly conversationsV1: ConversationsV1Resource;
+  readonly assistantsV1: AssistantsV1Resource;
   readonly diagnostics: DiagnosticsResource;
   private readonly transport: Transport;
 
@@ -88,6 +94,9 @@ export class Client {
     this.notifications = new NotificationsResource(this.transport);
     this.sip = new SipResource(this.transport);
     this.routesV2 = new RoutesV2Resource(this.transport);
+    this.voiceV1 = new VoiceV1Resource(this.transport);
+    this.conversationsV1 = new ConversationsV1Resource(this.transport);
+    this.assistantsV1 = new AssistantsV1Resource(this.transport);
     this.diagnostics = new DiagnosticsResource(this.transport);
   }
 
