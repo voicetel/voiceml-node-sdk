@@ -17,6 +17,10 @@ import { Client } from '../src/index.js';
 const ACCOUNT_SID = 'AC' + 'f'.repeat(32);
 const API_KEY = 'secret-key-1234';
 const BASE = 'https://voiceml.voicetel.com';
+// Conversations V1 rides its own product host (see hosts.ts). Routes V2 and
+// Voice V1 stay on the default host; the Conversations blocks below assert
+// CONV_HOST.
+const CONV_HOST = 'https://conversations.voicetel.com';
 
 // SID fixtures
 const QQ_SID = 'QQ' + '0'.repeat(32);
@@ -390,7 +394,7 @@ describe('Conversations V1 — Conversations', () => {
     date_created: '2026-06-27T10:00:00Z',
     date_updated: '2026-06-27T10:00:00Z',
     timers: null,
-    url: `${BASE}/v1/Conversations/${CH_SID}`,
+    url: `${CONV_HOST}/v1/Conversations/${CH_SID}`,
     links: null,
     bindings: null,
   };
@@ -405,11 +409,11 @@ describe('Conversations V1 — Conversations', () => {
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
     await c.conversationsV1.conversations.list();
-    expect(calls[0].url).toBe(`${BASE}/v1/Conversations`);
+    expect(calls[0].url).toBe(`${CONV_HOST}/v1/Conversations`);
     await c.conversationsV1.conversations.create({ FriendlyName: 'support' });
     expect(calls[1].init.method).toBe('POST');
     await c.conversationsV1.conversations.fetch(CH_SID);
-    expect(calls[2].url).toBe(`${BASE}/v1/Conversations/${CH_SID}`);
+    expect(calls[2].url).toBe(`${CONV_HOST}/v1/Conversations/${CH_SID}`);
     await c.conversationsV1.conversations.update(CH_SID, { State: 'closed' });
     const body = calls[3].init.body as URLSearchParams;
     expect(body.get('State')).toBe('closed');
@@ -430,7 +434,7 @@ describe('Conversations V1 — Conversations', () => {
       participant_sid: null,
       date_created: '2026-06-27T10:00:00Z',
       date_updated: '2026-06-27T10:00:00Z',
-      url: `${BASE}/v1/Conversations/${CH_SID}/Messages/${IM_SID}`,
+      url: `${CONV_HOST}/v1/Conversations/${CH_SID}/Messages/${IM_SID}`,
       delivery: null,
       links: null,
       content_sid: null,
@@ -445,14 +449,14 @@ describe('Conversations V1 — Conversations', () => {
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
     const msgs = c.conversationsV1.conversations.messages(CH_SID);
     await msgs.list();
-    expect(calls[0].url).toBe(`${BASE}/v1/Conversations/${CH_SID}/Messages`);
+    expect(calls[0].url).toBe(`${CONV_HOST}/v1/Conversations/${CH_SID}/Messages`);
     await msgs.create({ Author: 'a', Body: 'hi' });
     const body = calls[1].init.body as URLSearchParams;
     expect(body.get('Author')).toBe('a');
     expect(body.get('Body')).toBe('hi');
     await msgs.fetch(IM_SID);
     expect(calls[2].url).toBe(
-      `${BASE}/v1/Conversations/${CH_SID}/Messages/${IM_SID}`,
+      `${CONV_HOST}/v1/Conversations/${CH_SID}/Messages/${IM_SID}`,
     );
     await msgs.update(IM_SID, { Body: 'edited' });
     expect(calls[3].init.method).toBe('POST');
@@ -472,7 +476,7 @@ describe('Conversations V1 — Conversations', () => {
       error_code: 0,
       date_created: '2026-06-27T10:00:00Z',
       date_updated: '2026-06-27T10:00:00Z',
-      url: `${BASE}/v1/Conversations/${CH_SID}/Messages/${IM_SID}/Receipts/${DY_SID}`,
+      url: `${CONV_HOST}/v1/Conversations/${CH_SID}/Messages/${IM_SID}/Receipts/${DY_SID}`,
     };
     const { fetch, calls } = fakeFetch([
       jsonResponse({ delivery_receipts: [RCPT], meta: metaEnvelope() }),
@@ -482,11 +486,11 @@ describe('Conversations V1 — Conversations', () => {
     const r = c.conversationsV1.conversations.messages(CH_SID).receipts(IM_SID);
     await r.list();
     expect(calls[0].url).toBe(
-      `${BASE}/v1/Conversations/${CH_SID}/Messages/${IM_SID}/Receipts`,
+      `${CONV_HOST}/v1/Conversations/${CH_SID}/Messages/${IM_SID}/Receipts`,
     );
     await r.fetch(DY_SID);
     expect(calls[1].url).toBe(
-      `${BASE}/v1/Conversations/${CH_SID}/Messages/${IM_SID}/Receipts/${DY_SID}`,
+      `${CONV_HOST}/v1/Conversations/${CH_SID}/Messages/${IM_SID}/Receipts/${DY_SID}`,
     );
   });
 
@@ -501,7 +505,7 @@ describe('Conversations V1 — Conversations', () => {
       role_sid: null,
       date_created: '2026-06-27T10:00:00Z',
       date_updated: '2026-06-27T10:00:00Z',
-      url: `${BASE}/v1/Conversations/${CH_SID}/Participants/${MB_SID}`,
+      url: `${CONV_HOST}/v1/Conversations/${CH_SID}/Participants/${MB_SID}`,
       last_read_message_index: null,
       last_read_timestamp: null,
     };
@@ -515,7 +519,7 @@ describe('Conversations V1 — Conversations', () => {
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
     const p = c.conversationsV1.conversations.participants(CH_SID);
     await p.list();
-    expect(calls[0].url).toBe(`${BASE}/v1/Conversations/${CH_SID}/Participants`);
+    expect(calls[0].url).toBe(`${CONV_HOST}/v1/Conversations/${CH_SID}/Participants`);
     await p.create({ Identity: 'alice' });
     expect(calls[1].init.method).toBe('POST');
     await p.fetch(MB_SID);
@@ -530,7 +534,7 @@ describe('Conversations V1 — Conversations', () => {
       account_sid: ACCOUNT_SID,
       conversation_sid: CH_SID,
       target: 'webhook',
-      url: `${BASE}/v1/Conversations/${CH_SID}/Webhooks/${WH_SID}`,
+      url: `${CONV_HOST}/v1/Conversations/${CH_SID}/Webhooks/${WH_SID}`,
       configuration: null,
       date_created: '2026-06-27T10:00:00Z',
       date_updated: '2026-06-27T10:00:00Z',
@@ -545,7 +549,7 @@ describe('Conversations V1 — Conversations', () => {
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
     const w = c.conversationsV1.conversations.webhooks(CH_SID);
     await w.list();
-    expect(calls[0].url).toBe(`${BASE}/v1/Conversations/${CH_SID}/Webhooks`);
+    expect(calls[0].url).toBe(`${CONV_HOST}/v1/Conversations/${CH_SID}/Webhooks`);
     await w.create({ Target: 'webhook', 'Configuration.Url': 'https://x' });
     const body = calls[1].init.body as URLSearchParams;
     expect(body.get('Target')).toBe('webhook');
@@ -571,7 +575,7 @@ describe('Conversations V1 — Roles', () => {
     permissions: ['sendMessage', 'leaveConversation'],
     date_created: '2026-06-27T10:00:00Z',
     date_updated: '2026-06-27T10:00:00Z',
-    url: `${BASE}/v1/Roles/${RL_SID}`,
+    url: `${CONV_HOST}/v1/Roles/${RL_SID}`,
   };
   it('5 CRUD ops under /v1/Roles', async () => {
     const { fetch, calls } = fakeFetch([
@@ -583,7 +587,7 @@ describe('Conversations V1 — Roles', () => {
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
     await c.conversationsV1.roles.list();
-    expect(calls[0].url).toBe(`${BASE}/v1/Roles`);
+    expect(calls[0].url).toBe(`${CONV_HOST}/v1/Roles`);
     await c.conversationsV1.roles.create({
       FriendlyName: 'admin',
       Type: 'conversation',
@@ -594,7 +598,7 @@ describe('Conversations V1 — Roles', () => {
     expect(body.get('Type')).toBe('conversation');
     expect(body.getAll('Permission')).toEqual(['sendMessage']);
     await c.conversationsV1.roles.fetch(RL_SID);
-    expect(calls[2].url).toBe(`${BASE}/v1/Roles/${RL_SID}`);
+    expect(calls[2].url).toBe(`${CONV_HOST}/v1/Roles/${RL_SID}`);
     await c.conversationsV1.roles.update(RL_SID, { Permission: ['leaveConversation'] });
     await c.conversationsV1.roles.delete(RL_SID);
     expect(calls[4].init.method).toBe('DELETE');
@@ -618,7 +622,7 @@ describe('Conversations V1 — Users + UserConversations', () => {
     is_notifiable: null,
     date_created: '2026-06-27T10:00:00Z',
     date_updated: '2026-06-27T10:00:00Z',
-    url: `${BASE}/v1/Users/${US_SID}`,
+    url: `${CONV_HOST}/v1/Users/${US_SID}`,
     links: null,
   };
 
@@ -640,7 +644,7 @@ describe('Conversations V1 — Users + UserConversations', () => {
       created_by: null,
       notification_level: 'default',
       unique_name: null,
-      url: `${BASE}/v1/Users/${US_SID}/Conversations/${CH_SID}`,
+      url: `${CONV_HOST}/v1/Users/${US_SID}/Conversations/${CH_SID}`,
       links: null,
     };
     const { fetch, calls } = fakeFetch([
@@ -657,21 +661,21 @@ describe('Conversations V1 — Users + UserConversations', () => {
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
     // Flat CRUD
     await c.conversationsV1.users.list();
-    expect(calls[0].url).toBe(`${BASE}/v1/Users`);
+    expect(calls[0].url).toBe(`${CONV_HOST}/v1/Users`);
     await c.conversationsV1.users.create({ Identity: 'alice' });
     expect(calls[1].init.method).toBe('POST');
     await c.conversationsV1.users.fetch(US_SID);
-    expect(calls[2].url).toBe(`${BASE}/v1/Users/${US_SID}`);
+    expect(calls[2].url).toBe(`${CONV_HOST}/v1/Users/${US_SID}`);
     await c.conversationsV1.users.update(US_SID, { FriendlyName: 'A' });
     await c.conversationsV1.users.delete(US_SID);
     expect(calls[4].init.method).toBe('DELETE');
     // Callable scope -> conversations sub-resource
     const ucr = c.conversationsV1.users(US_SID).conversations;
     await ucr.list();
-    expect(calls[5].url).toBe(`${BASE}/v1/Users/${US_SID}/Conversations`);
+    expect(calls[5].url).toBe(`${CONV_HOST}/v1/Users/${US_SID}/Conversations`);
     await ucr.fetch(CH_SID);
     expect(calls[6].url).toBe(
-      `${BASE}/v1/Users/${US_SID}/Conversations/${CH_SID}`,
+      `${CONV_HOST}/v1/Users/${US_SID}/Conversations/${CH_SID}`,
     );
     await ucr.update(CH_SID, { NotificationLevel: 'muted' });
     const body = calls[7].init.body as URLSearchParams;
@@ -694,7 +698,7 @@ describe('Conversations V1 — Credentials', () => {
     sandbox: null,
     date_created: '2026-06-27T10:00:00Z',
     date_updated: '2026-06-27T10:00:00Z',
-    url: `${BASE}/v1/Credentials/${CR_SID}`,
+    url: `${CONV_HOST}/v1/Credentials/${CR_SID}`,
   };
   it('5 CRUD ops under /v1/Credentials', async () => {
     const { fetch, calls } = fakeFetch([
@@ -706,7 +710,7 @@ describe('Conversations V1 — Credentials', () => {
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
     await c.conversationsV1.credentials.list();
-    expect(calls[0].url).toBe(`${BASE}/v1/Credentials`);
+    expect(calls[0].url).toBe(`${CONV_HOST}/v1/Credentials`);
     await c.conversationsV1.credentials.create({ Type: 'apn', FriendlyName: 'apns' });
     const body = calls[1].init.body as URLSearchParams;
     expect(body.get('Type')).toBe('apn');
@@ -728,7 +732,7 @@ describe('Conversations V1 — Configuration', () => {
     default_messaging_service_sid: null,
     default_inactive_timer: null,
     default_closed_timer: null,
-    url: `${BASE}/v1/Configuration`,
+    url: `${CONV_HOST}/v1/Configuration`,
     links: null,
   };
   const WBH = {
@@ -738,7 +742,7 @@ describe('Conversations V1 — Configuration', () => {
     pre_webhook_url: null,
     post_webhook_url: null,
     target: 'webhook',
-    url: `${BASE}/v1/Configuration/Webhooks`,
+    url: `${CONV_HOST}/v1/Configuration/Webhooks`,
   };
   const ADDR = {
     sid: IG_SID,
@@ -749,7 +753,7 @@ describe('Conversations V1 — Configuration', () => {
     auto_creation: null,
     date_created: '2026-06-27T10:00:00Z',
     date_updated: '2026-06-27T10:00:00Z',
-    url: `${BASE}/v1/Configuration/Addresses/${IG_SID}`,
+    url: `${CONV_HOST}/v1/Configuration/Addresses/${IG_SID}`,
     address_country: null,
   };
 
@@ -767,7 +771,7 @@ describe('Conversations V1 — Configuration', () => {
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
     await c.conversationsV1.configuration.fetch();
-    expect(calls[0].url).toBe(`${BASE}/v1/Configuration`);
+    expect(calls[0].url).toBe(`${CONV_HOST}/v1/Configuration`);
     await c.conversationsV1.configuration.update({
       DefaultInactiveTimer: 'PT1H',
     });
@@ -775,7 +779,7 @@ describe('Conversations V1 — Configuration', () => {
     expect(body.get('DefaultInactiveTimer')).toBe('PT1H');
 
     await c.conversationsV1.configuration.webhooks.fetch();
-    expect(calls[2].url).toBe(`${BASE}/v1/Configuration/Webhooks`);
+    expect(calls[2].url).toBe(`${CONV_HOST}/v1/Configuration/Webhooks`);
     await c.conversationsV1.configuration.webhooks.update({
       Method: 'POST',
       Target: 'webhook',
@@ -783,7 +787,7 @@ describe('Conversations V1 — Configuration', () => {
     expect(calls[3].init.method).toBe('POST');
 
     await c.conversationsV1.configuration.addresses.list();
-    expect(calls[4].url).toBe(`${BASE}/v1/Configuration/Addresses`);
+    expect(calls[4].url).toBe(`${CONV_HOST}/v1/Configuration/Addresses`);
     await c.conversationsV1.configuration.addresses.create({
       Type: 'sms',
       Address: '+15551234567',
@@ -792,7 +796,7 @@ describe('Conversations V1 — Configuration', () => {
     expect(body2.get('Type')).toBe('sms');
     expect(body2.get('Address')).toBe('+15551234567');
     await c.conversationsV1.configuration.addresses.fetch(IG_SID);
-    expect(calls[6].url).toBe(`${BASE}/v1/Configuration/Addresses/${IG_SID}`);
+    expect(calls[6].url).toBe(`${CONV_HOST}/v1/Configuration/Addresses/${IG_SID}`);
     await c.conversationsV1.configuration.addresses.update(IG_SID, {
       FriendlyName: 'renamed',
     });
@@ -830,7 +834,7 @@ describe('Conversations V1 — ParticipantConversations + ConversationWithPartic
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
     await c.conversationsV1.participantConversations.list({ Identity: 'alice' });
-    expect(calls[0].url).toBe(`${BASE}/v1/ParticipantConversations?Identity=alice`);
+    expect(calls[0].url).toBe(`${CONV_HOST}/v1/ParticipantConversations?Identity=alice`);
   });
 
   it('conversationWithParticipants.create posts to /v1/ConversationWithParticipants', async () => {
@@ -848,7 +852,7 @@ describe('Conversations V1 — ParticipantConversations + ConversationWithPartic
       timers: null,
       links: null,
       bindings: null,
-      url: `${BASE}/v1/Conversations/${CH_SID}`,
+      url: `${CONV_HOST}/v1/Conversations/${CH_SID}`,
     };
     const { fetch, calls } = fakeFetch([jsonResponse(CWP, 201)]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
@@ -859,7 +863,7 @@ describe('Conversations V1 — ParticipantConversations + ConversationWithPartic
         JSON.stringify({ identity: 'bob' }),
       ],
     });
-    expect(calls[0].url).toBe(`${BASE}/v1/ConversationWithParticipants`);
+    expect(calls[0].url).toBe(`${CONV_HOST}/v1/ConversationWithParticipants`);
     expect(calls[0].init.method).toBe('POST');
     const body = calls[0].init.body as URLSearchParams;
     expect(body.get('FriendlyName')).toBe('group');
@@ -873,7 +877,7 @@ describe('Conversations V1 — ParticipantConversations + ConversationWithPartic
       friendly_name: 'svc',
       date_created: '2026-06-27T10:00:00Z',
       date_updated: '2026-06-27T10:00:00Z',
-      url: `${BASE}/v1/Services/${IS_SID}`,
+      url: `${CONV_HOST}/v1/Services/${IS_SID}`,
       links: null,
     };
     const { fetch, calls } = fakeFetch([
@@ -884,11 +888,11 @@ describe('Conversations V1 — ParticipantConversations + ConversationWithPartic
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
     await c.conversationsV1.services.list();
-    expect(calls[0].url).toBe(`${BASE}/v1/Services`);
+    expect(calls[0].url).toBe(`${CONV_HOST}/v1/Services`);
     await c.conversationsV1.services.create({ FriendlyName: 'svc' });
     expect(calls[1].init.method).toBe('POST');
     await c.conversationsV1.services.fetch(IS_SID);
-    expect(calls[2].url).toBe(`${BASE}/v1/Services/${IS_SID}`);
+    expect(calls[2].url).toBe(`${CONV_HOST}/v1/Services/${IS_SID}`);
     await c.conversationsV1.services.delete(IS_SID);
     expect(calls[3].init.method).toBe('DELETE');
   });

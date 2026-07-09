@@ -10,6 +10,7 @@
 export { Client, type ClientOptions } from './client.js';
 export type { TransportOptions, RequestOptions } from './transport.js';
 export { Transport } from './transport.js';
+export { resolveProductBaseUrls, type ProductBaseUrls } from './hosts.js';
 export {
   ApiError,
   AuthenticationError,
