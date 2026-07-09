@@ -61,7 +61,25 @@ export type {
 export { DiagnosticsResource } from './diagnostics.js';
 export { IncomingPhoneNumbersResource } from './incoming_phone_numbers.js';
 export { MessagesResource } from './messages.js';
+export {
+  MessagingV1Resource,
+  MessagingV1ServicesResource,
+} from './messaging_v1.js';
 export { NotificationsResource } from './notifications.js';
+export {
+  PricingResource,
+  PricingCountriesResource,
+  PricingV1Resource,
+  PricingV1VoiceResource,
+  PricingV1VoiceNumbersResource,
+  PricingV1MessagingResource,
+  PricingV1PhoneNumbersResource,
+  PricingV2Resource,
+  PricingV2VoiceResource,
+  PricingV2VoiceNumbersResource,
+  PricingV2TrunkingResource,
+  PricingV2TrunkingNumbersResource,
+} from './pricing.js';
 export { QueuesResource } from './queues.js';
 export { RecordingsResource } from './recordings.js';
 export {

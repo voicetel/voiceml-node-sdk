@@ -1,11 +1,11 @@
 # 📞 VoiceML TypeScript SDK
 
-The official TypeScript / Node client for the [VoiceML REST API](https://voicetel.com/docs/api/v0.8/voiceml/) — Twilio-compatible outbound voice and answering-machine-detection from VoiceTel, with end-to-end TypeScript types and dual ESM / CJS distribution.
+The official TypeScript / Node client for the [VoiceML REST API](https://voicetel.com/docs/api/v0.9/voiceml/) — Twilio-compatible outbound voice and answering-machine-detection from VoiceTel, with end-to-end TypeScript types and dual ESM / CJS distribution.
 
-![Version](https://img.shields.io/badge/version-0.9.1-blue)
+![Version](https://img.shields.io/badge/version-0.9.2-blue)
 ![Node](https://img.shields.io/badge/node-%E2%89%A518.17-blue)
 ![License](https://img.shields.io/badge/license-MIT%20%2B%20Commons%20Clause-green)
-![Tests](https://img.shields.io/badge/tests-65%20unit-brightgreen)
+![Tests](https://img.shields.io/badge/tests-148%20unit-brightgreen)
 ![Typed](https://img.shields.io/badge/typed-strict-blue)
 
 ## 📚 Table of Contents
@@ -59,7 +59,7 @@ The official TypeScript / Node client for the [VoiceML REST API](https://voicete
 - **Diagnostics** — `/health` deep probe, OpenAPI spec.
 
 ### 🧪 Tested
-- **84 unit tests** with a mocked transport (`vitest` + fetch stub) — request shapes, response parsing, error mapping, retry behavior, and pagination iterators all covered.
+- **148 unit tests** with a mocked transport (`vitest` + fetch stub) — request shapes, response parsing, error mapping, retry behavior, per-product host routing, and pagination iterators all covered.
 - **Structural conformance harness** in `tests/integration/conformance.test.ts` validates SDK interfaces against canonical Twilio response fixtures — opt-in via `VOICEML_CONFORMANCE_FIXTURES`, so CI stays fast.
 
 ### 📦 Clean Distribution
@@ -111,7 +111,7 @@ const c = new Client({ accountSid: 'AC…', apiKey: '…' });
 const health = await c.diagnostics.health(); // uses your AccountSid + key on every call
 ```
 
-> Don't have credentials yet? See **[voicetel.com/docs/api/v0.8/voiceml/](https://voicetel.com/docs/api/v0.8/voiceml/)** for issuance and rotation.
+> Don't have credentials yet? See **[voicetel.com/docs/api/v0.9/voiceml/](https://voicetel.com/docs/api/v0.9/voiceml/)** for issuance and rotation.
 
 ## 🗺️ Resource Reference
 
@@ -124,8 +124,30 @@ const health = await c.diagnostics.health(); // uses your AccountSid + key on ev
 | Recordings | `client.recordings` | account-wide list, metadata, audio fetch (follows S3 redirect), delete |
 | Messages | `client.messages` | create, fetch, list, update, delete (To/From/DateSent filters; Body redaction; Status=canceled) |
 | IncomingPhoneNumbers | `client.incomingPhoneNumbers` | list, fetch, update |
+| Messaging Service | `client.messagingV1.services` | create, list, fetch, update, delete — served on `messaging.voicetel.com` |
+| Pricing | `client.pricing` | read-only voice / messaging / phone-number / trunking pricing under `v1` + `v2` |
 | Notifications | `client.notifications` | fetch, list |
 | Diagnostics | `client.diagnostics` | `/health`, OpenAPI spec |
+
+### Product hosts
+
+VoiceML mirrors Twilio's product-per-subdomain model. Most resources answer on the default host (`voiceml.voicetel.com`), but two products ride their own subdomains:
+
+| Product | Host | Client option |
+|---|---|---|
+| Conversations (`client.conversationsV1`) | `conversations.voicetel.com` | `conversationsBaseUrl` |
+| Messaging Service (`client.messagingV1`) | `messaging.voicetel.com` | `messagingBaseUrl` |
+
+The host is what disambiguates a Messaging Service (`MG…`) from a Conversation Service (`IS…`) — they share the `/v1/Services` path shape. Hosts are derived automatically from `baseUrl`: a `voiceml.*.voicetel.com` base swaps the `voiceml` label per product, while any other base URL (a self-hosted instance) keeps every product on that single host. Point `messagingBaseUrl` / `conversationsBaseUrl` at a custom subdomain to override:
+
+```ts
+const c = new Client({
+  accountSid: 'AC…',
+  apiKey: '…',
+  baseUrl: 'https://pbx.example.com',
+  messagingBaseUrl: 'https://msg.example.com',
+});
+```
 
 All request and response shapes are exported from the package — destructure what you need:
 
@@ -269,7 +291,7 @@ VOICEML_CONFORMANCE_FIXTURES=/path/to/twilio-conformance-fixtures/fixtures \
 
 ## 📖 API Documentation
 
-- **Reference docs:** [voicetel.com/docs/api/v0.8/voiceml/](https://voicetel.com/docs/api/v0.8/voiceml/)
+- **Reference docs:** [voicetel.com/docs/api/v0.9/voiceml/](https://voicetel.com/docs/api/v0.9/voiceml/)
 - **Validator:** [voicetel.com/voiceml/validator/](https://voicetel.com/voiceml/validator/)
 - **SDK catalogue:** [voicetel.com/docs/voiceml-sdks/](https://voicetel.com/docs/voiceml-sdks/)
 - **Type definitions:** every wire shape is exported from `@voicetel.com/voiceml` — `import { type Call, type Message, type Queue } from '@voicetel.com/voiceml'`.

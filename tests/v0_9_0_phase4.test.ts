@@ -19,7 +19,10 @@ import { Client } from '../src/index.js';
 
 const ACCOUNT_SID = 'AC' + 'f'.repeat(32);
 const API_KEY = 'secret-key-1234';
-const BASE = 'https://voiceml.voicetel.com';
+// Conversations V1 rides its own product host (see hosts.ts); the whole
+// phase-4 service-scoped surface is Conversation Service, so every URL here is
+// on the conversations host.
+const BASE = 'https://conversations.voicetel.com';
 
 // SID fixtures
 const IS_SID = 'IS' + '0'.repeat(32);
