@@ -16,8 +16,8 @@ const V1_PARAMS = {
   Digits: '1234',
   AccountSid: 'ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
 };
-const V1_SIG = 'pk/0TPPT+p98NEZykeWQLqRXyGU=';
-const V1_SIG_443 = '/Bw0s+u5vlGd6zLAOTz/eMg33pk=';
+const V1_SIG = 'RweoLyWqNC7H8+MLXPb7EPz18OI=';
+const V1_SIG_443 = 'xE0r2wPa6d1ktQeCFpPyINmTNYg=';
 
 const V3_URL = 'https://example.com/hook';
 const V3_FORM: Array<[string, string]> = [
