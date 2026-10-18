@@ -1,3 +1,4 @@
+import { route } from '../encoding.js';
 import type {
   RoutesV2PhoneNumber,
   RoutesV2SipDomain,
@@ -7,7 +8,7 @@ import type {
 import type { Transport } from '../transport.js';
 
 /**
- * `client.routesV2.*` — Twilio's routes/v2 Inbound Processing Region API.
+ * `client.routesV2.*` — Twilio-compatible Routes v2 (Inbound Processing Region) API.
  *
  * The `/v2/` namespace sits outside the `/2010-04-01/Accounts/.../` prefix.
  * The account is resolved from HTTP Basic auth; SIP-domain paths are keyed
@@ -33,21 +34,21 @@ export class RoutesV2SipDomainsResource {
   }
 
   /** Fetch a domain's Inbound Processing Region binding. */
-  fetch(domainName: string): Promise<RoutesV2SipDomain> {
+  async fetch(domainName: string): Promise<RoutesV2SipDomain> {
     return this.t.request<RoutesV2SipDomain>({
       method: 'GET',
-      path: `/v2/SipDomains/${domainName}`,
+      path: route`/v2/SipDomains/${domainName}`,
     });
   }
 
   /** Update a domain's voice region and/or friendly name. */
-  update(
+  async update(
     domainName: string,
     body: UpdateRoutesV2SipDomainRequest,
   ): Promise<RoutesV2SipDomain> {
     return this.t.request<RoutesV2SipDomain>({
       method: 'POST',
-      path: `/v2/SipDomains/${domainName}`,
+      path: route`/v2/SipDomains/${domainName}`,
       form: body,
     });
   }
@@ -62,21 +63,21 @@ export class RoutesV2PhoneNumbersResource {
   }
 
   /** Fetch a phone number's Inbound Processing Region binding. */
-  fetch(phoneNumber: string): Promise<RoutesV2PhoneNumber> {
+  async fetch(phoneNumber: string): Promise<RoutesV2PhoneNumber> {
     return this.t.request<RoutesV2PhoneNumber>({
       method: 'GET',
-      path: `/v2/PhoneNumbers/${encodeURIComponent(phoneNumber)}`,
+      path: route`/v2/PhoneNumbers/${phoneNumber}`,
     });
   }
 
   /** Update a phone number's voice region and/or friendly name. */
-  update(
+  async update(
     phoneNumber: string,
     body: UpdateRoutesV2PhoneNumberRequest,
   ): Promise<RoutesV2PhoneNumber> {
     return this.t.request<RoutesV2PhoneNumber>({
       method: 'POST',
-      path: `/v2/PhoneNumbers/${encodeURIComponent(phoneNumber)}`,
+      path: route`/v2/PhoneNumbers/${phoneNumber}`,
       form: body,
     });
   }

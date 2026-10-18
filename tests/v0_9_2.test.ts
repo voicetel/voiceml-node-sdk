@@ -228,7 +228,7 @@ describe('Pricing v1 voice countries + number', () => {
       url: `${BASE}/v1/Voice/Countries/US`,
     };
     const number = {
-      number: '+18005551234',
+      number: '+14155550100',
       country: 'United States',
       iso_country: 'US',
       outbound_call_price: { base_price: '0.013', current_price: '0.013' },
@@ -238,7 +238,7 @@ describe('Pricing v1 voice countries + number', () => {
         number_type: 'toll free',
       },
       price_unit: 'USD',
-      url: `${BASE}/v1/Voice/Numbers/+18005551234`,
+      url: `${BASE}/v1/Voice/Numbers/+14155550100`,
     };
     const { fetch, calls } = fakeFetch([
       jsonResponse(countries),
@@ -249,7 +249,7 @@ describe('Pricing v1 voice countries + number', () => {
 
     const listed = await c.pricing.v1.voice.countries.list();
     const fetched = await c.pricing.v1.voice.countries.fetch('US');
-    const num = await c.pricing.v1.voice.numbers.fetch('+18005551234');
+    const num = await c.pricing.v1.voice.numbers.fetch('+14155550100');
 
     expect(listed.countries[0].iso_country).toBe('US');
     expect(fetched.outbound_prefix_prices[0].prefixes).toEqual(['1']);
@@ -259,14 +259,14 @@ describe('Pricing v1 voice countries + number', () => {
     expect(calls[0].url).toBe(`${BASE}/v1/Voice/Countries`);
     expect(calls[1].url).toBe(`${BASE}/v1/Voice/Countries/US`);
     // E.164 `+` must be percent-encoded in the path segment.
-    expect(calls[2].url).toBe(`${BASE}/v1/Voice/Numbers/%2B18005551234`);
+    expect(calls[2].url).toBe(`${BASE}/v1/Voice/Numbers/%2B14155550100`);
   });
 });
 
 describe('Pricing v2 voice number with origination', () => {
   it('URL-encodes the number path and origination query', async () => {
     const payload = {
-      destination_number: '+18005551234',
+      destination_number: '+14155550100',
       origination_number: '+12025550199',
       country: 'United States',
       iso_country: 'US',
@@ -279,17 +279,17 @@ describe('Pricing v2 voice number with origination', () => {
         number_type: 'local',
       },
       price_unit: 'USD',
-      url: `${BASE}/v2/Voice/Numbers/+18005551234`,
+      url: `${BASE}/v2/Voice/Numbers/+14155550100`,
     };
     const { fetch, calls } = fakeFetch([jsonResponse(payload)]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
-    const got = await c.pricing.v2.voice.numbers.fetch('+18005551234', {
+    const got = await c.pricing.v2.voice.numbers.fetch('+14155550100', {
       originationNumber: '+12025550199',
     });
     expect(got.origination_number).toBe('+12025550199');
     expect(calls[0].url).toBe(
-      `${BASE}/v2/Voice/Numbers/%2B18005551234?OriginationNumber=%2B12025550199`,
+      `${BASE}/v2/Voice/Numbers/%2B14155550100?OriginationNumber=%2B12025550199`,
     );
     expect(hostOf(calls[0].url)).toBe('voiceml.voicetel.com');
   });

@@ -1,3 +1,4 @@
+import { encodePathSegment, route } from '../encoding.js';
 import type {
   ConversationsV1ConfigAddress,
   ConversationsV1ConfigAddressList,
@@ -92,7 +93,7 @@ import type {
 import type { Transport } from '../transport.js';
 
 /**
- * `client.conversationsV1.*` — Twilio Conversations v1 surface.
+ * `client.conversationsV1.*` — Twilio-compatible Conversations v1 API.
  *
  * The `/v1/` namespace sits outside the `/2010-04-01/Accounts/.../` prefix.
  * The account is resolved from HTTP Basic auth.
@@ -140,11 +141,11 @@ export class ConversationsV1ConversationMessageReceiptsResource {
 
   private root(tail?: string): string {
     const base =
-      `/v1/Conversations/${this.conversationSid}/Messages/${this.messageSid}/Receipts`;
-    return tail ? `${base}/${tail}` : base;
+      route`/v1/Conversations/${this.conversationSid}/Messages/${this.messageSid}/Receipts`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1ConversationMessageReceiptList> {
     return this.t.request<ConversationsV1ConversationMessageReceiptList>({
@@ -154,7 +155,7 @@ export class ConversationsV1ConversationMessageReceiptsResource {
     });
   }
 
-  fetch(sid: string): Promise<ConversationsV1ConversationMessageReceipt> {
+  async fetch(sid: string): Promise<ConversationsV1ConversationMessageReceipt> {
     return this.t.request<ConversationsV1ConversationMessageReceipt>({
       method: 'GET',
       path: this.root(sid),
@@ -173,11 +174,11 @@ export class ConversationsV1ConversationMessagesResource {
   }
 
   private root(tail?: string): string {
-    const base = `/v1/Conversations/${this.conversationSid}/Messages`;
-    return tail ? `${base}/${tail}` : base;
+    const base = route`/v1/Conversations/${this.conversationSid}/Messages`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1ConversationMessageList> {
     return this.t.request<ConversationsV1ConversationMessageList>({
@@ -187,7 +188,7 @@ export class ConversationsV1ConversationMessagesResource {
     });
   }
 
-  create(
+  async create(
     body: CreateConversationsV1ConversationMessageRequest,
   ): Promise<ConversationsV1ConversationMessage> {
     return this.t.request<ConversationsV1ConversationMessage>({
@@ -197,14 +198,14 @@ export class ConversationsV1ConversationMessagesResource {
     });
   }
 
-  fetch(messageSid: string): Promise<ConversationsV1ConversationMessage> {
+  async fetch(messageSid: string): Promise<ConversationsV1ConversationMessage> {
     return this.t.request<ConversationsV1ConversationMessage>({
       method: 'GET',
       path: this.root(messageSid),
     });
   }
 
-  update(
+  async update(
     messageSid: string,
     body: UpdateConversationsV1ConversationMessageRequest,
   ): Promise<ConversationsV1ConversationMessage> {
@@ -243,11 +244,11 @@ export class ConversationsV1ConversationParticipantsResource {
   }
 
   private root(tail?: string): string {
-    const base = `/v1/Conversations/${this.conversationSid}/Participants`;
-    return tail ? `${base}/${tail}` : base;
+    const base = route`/v1/Conversations/${this.conversationSid}/Participants`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1ConversationParticipantList> {
     return this.t.request<ConversationsV1ConversationParticipantList>({
@@ -257,7 +258,7 @@ export class ConversationsV1ConversationParticipantsResource {
     });
   }
 
-  create(
+  async create(
     body: CreateConversationsV1ConversationParticipantRequest,
   ): Promise<ConversationsV1ConversationParticipant> {
     return this.t.request<ConversationsV1ConversationParticipant>({
@@ -267,14 +268,14 @@ export class ConversationsV1ConversationParticipantsResource {
     });
   }
 
-  fetch(participantSid: string): Promise<ConversationsV1ConversationParticipant> {
+  async fetch(participantSid: string): Promise<ConversationsV1ConversationParticipant> {
     return this.t.request<ConversationsV1ConversationParticipant>({
       method: 'GET',
       path: this.root(participantSid),
     });
   }
 
-  update(
+  async update(
     participantSid: string,
     body: UpdateConversationsV1ConversationParticipantRequest,
   ): Promise<ConversationsV1ConversationParticipant> {
@@ -304,11 +305,11 @@ export class ConversationsV1ConversationWebhooksResource {
   }
 
   private root(tail?: string): string {
-    const base = `/v1/Conversations/${this.conversationSid}/Webhooks`;
-    return tail ? `${base}/${tail}` : base;
+    const base = route`/v1/Conversations/${this.conversationSid}/Webhooks`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1ConversationScopedWebhookList> {
     return this.t.request<ConversationsV1ConversationScopedWebhookList>({
@@ -318,7 +319,7 @@ export class ConversationsV1ConversationWebhooksResource {
     });
   }
 
-  create(
+  async create(
     body: CreateConversationsV1ConversationScopedWebhookRequest,
   ): Promise<ConversationsV1ConversationScopedWebhook> {
     return this.t.request<ConversationsV1ConversationScopedWebhook>({
@@ -328,14 +329,14 @@ export class ConversationsV1ConversationWebhooksResource {
     });
   }
 
-  fetch(webhookSid: string): Promise<ConversationsV1ConversationScopedWebhook> {
+  async fetch(webhookSid: string): Promise<ConversationsV1ConversationScopedWebhook> {
     return this.t.request<ConversationsV1ConversationScopedWebhook>({
       method: 'GET',
       path: this.root(webhookSid),
     });
   }
 
-  update(
+  async update(
     webhookSid: string,
     body: UpdateConversationsV1ConversationScopedWebhookRequest,
   ): Promise<ConversationsV1ConversationScopedWebhook> {
@@ -361,7 +362,7 @@ export class ConversationsV1ConversationsResource {
     this.t = transport;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1ConversationList> {
     return this.t.request<ConversationsV1ConversationList>({
@@ -371,7 +372,7 @@ export class ConversationsV1ConversationsResource {
     });
   }
 
-  create(
+  async create(
     body: CreateConversationsV1ConversationRequest,
   ): Promise<ConversationsV1Conversation> {
     return this.t.request<ConversationsV1Conversation>({
@@ -381,20 +382,20 @@ export class ConversationsV1ConversationsResource {
     });
   }
 
-  fetch(conversationSid: string): Promise<ConversationsV1Conversation> {
+  async fetch(conversationSid: string): Promise<ConversationsV1Conversation> {
     return this.t.request<ConversationsV1Conversation>({
       method: 'GET',
-      path: `/v1/Conversations/${conversationSid}`,
+      path: route`/v1/Conversations/${conversationSid}`,
     });
   }
 
-  update(
+  async update(
     conversationSid: string,
     body: UpdateConversationsV1ConversationRequest,
   ): Promise<ConversationsV1Conversation> {
     return this.t.request<ConversationsV1Conversation>({
       method: 'POST',
-      path: `/v1/Conversations/${conversationSid}`,
+      path: route`/v1/Conversations/${conversationSid}`,
       form: body,
     });
   }
@@ -402,7 +403,7 @@ export class ConversationsV1ConversationsResource {
   async delete(conversationSid: string): Promise<void> {
     await this.t.request<void>({
       method: 'DELETE',
-      path: `/v1/Conversations/${conversationSid}`,
+      path: route`/v1/Conversations/${conversationSid}`,
     });
   }
 
@@ -435,7 +436,7 @@ export class ConversationsV1RolesResource {
     this.t = transport;
   }
 
-  list(params: ListConversationsV1PageParams = {}): Promise<ConversationsV1RoleList> {
+  async list(params: ListConversationsV1PageParams = {}): Promise<ConversationsV1RoleList> {
     return this.t.request<ConversationsV1RoleList>({
       method: 'GET',
       path: '/v1/Roles',
@@ -443,7 +444,7 @@ export class ConversationsV1RolesResource {
     });
   }
 
-  create(body: CreateConversationsV1RoleRequest): Promise<ConversationsV1Role> {
+  async create(body: CreateConversationsV1RoleRequest): Promise<ConversationsV1Role> {
     return this.t.request<ConversationsV1Role>({
       method: 'POST',
       path: '/v1/Roles',
@@ -451,20 +452,20 @@ export class ConversationsV1RolesResource {
     });
   }
 
-  fetch(sid: string): Promise<ConversationsV1Role> {
+  async fetch(sid: string): Promise<ConversationsV1Role> {
     return this.t.request<ConversationsV1Role>({
       method: 'GET',
-      path: `/v1/Roles/${sid}`,
+      path: route`/v1/Roles/${sid}`,
     });
   }
 
-  update(
+  async update(
     sid: string,
     body: UpdateConversationsV1RoleRequest,
   ): Promise<ConversationsV1Role> {
     return this.t.request<ConversationsV1Role>({
       method: 'POST',
-      path: `/v1/Roles/${sid}`,
+      path: route`/v1/Roles/${sid}`,
       form: body,
     });
   }
@@ -472,7 +473,7 @@ export class ConversationsV1RolesResource {
   async delete(sid: string): Promise<void> {
     await this.t.request<void>({
       method: 'DELETE',
-      path: `/v1/Roles/${sid}`,
+      path: route`/v1/Roles/${sid}`,
     });
   }
 }
@@ -492,11 +493,11 @@ export class ConversationsV1UserConversationsResource {
   }
 
   private root(tail?: string): string {
-    const base = `/v1/Users/${this.userSid}/Conversations`;
-    return tail ? `${base}/${tail}` : base;
+    const base = route`/v1/Users/${this.userSid}/Conversations`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1UserConversationList> {
     return this.t.request<ConversationsV1UserConversationList>({
@@ -506,14 +507,14 @@ export class ConversationsV1UserConversationsResource {
     });
   }
 
-  fetch(conversationSid: string): Promise<ConversationsV1UserConversation> {
+  async fetch(conversationSid: string): Promise<ConversationsV1UserConversation> {
     return this.t.request<ConversationsV1UserConversation>({
       method: 'GET',
       path: this.root(conversationSid),
     });
   }
 
-  update(
+  async update(
     conversationSid: string,
     body: UpdateConversationsV1UserConversationRequest,
   ): Promise<ConversationsV1UserConversation> {
@@ -565,37 +566,37 @@ function makeUsersCallable(transport: Transport): ConversationsV1UsersCallable {
   const fn = ((sid: string) =>
     new ConversationsV1UserScoped(transport, sid)) as ConversationsV1UsersCallable;
 
-  fn.list = (params: ListConversationsV1PageParams = {}) =>
+  fn.list = async (params: ListConversationsV1PageParams = {}) =>
     transport.request<ConversationsV1UserList>({
       method: 'GET',
       path: '/v1/Users',
       params,
     });
 
-  fn.create = (body: CreateConversationsV1UserRequest) =>
+  fn.create = async (body: CreateConversationsV1UserRequest) =>
     transport.request<ConversationsV1User>({
       method: 'POST',
       path: '/v1/Users',
       form: body,
     });
 
-  fn.fetch = (sid: string) =>
+  fn.fetch = async (sid: string) =>
     transport.request<ConversationsV1User>({
       method: 'GET',
-      path: `/v1/Users/${sid}`,
+      path: route`/v1/Users/${sid}`,
     });
 
-  fn.update = (sid: string, body: UpdateConversationsV1UserRequest) =>
+  fn.update = async (sid: string, body: UpdateConversationsV1UserRequest) =>
     transport.request<ConversationsV1User>({
       method: 'POST',
-      path: `/v1/Users/${sid}`,
+      path: route`/v1/Users/${sid}`,
       form: body,
     });
 
   fn.delete = async (sid: string) => {
     await transport.request<void>({
       method: 'DELETE',
-      path: `/v1/Users/${sid}`,
+      path: route`/v1/Users/${sid}`,
     });
   };
 
@@ -613,7 +614,7 @@ export class ConversationsV1CredentialsResource {
     this.t = transport;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1CredentialList> {
     return this.t.request<ConversationsV1CredentialList>({
@@ -623,7 +624,7 @@ export class ConversationsV1CredentialsResource {
     });
   }
 
-  create(
+  async create(
     body: CreateConversationsV1CredentialRequest,
   ): Promise<ConversationsV1Credential> {
     return this.t.request<ConversationsV1Credential>({
@@ -633,20 +634,20 @@ export class ConversationsV1CredentialsResource {
     });
   }
 
-  fetch(sid: string): Promise<ConversationsV1Credential> {
+  async fetch(sid: string): Promise<ConversationsV1Credential> {
     return this.t.request<ConversationsV1Credential>({
       method: 'GET',
-      path: `/v1/Credentials/${sid}`,
+      path: route`/v1/Credentials/${sid}`,
     });
   }
 
-  update(
+  async update(
     sid: string,
     body: UpdateConversationsV1CredentialRequest,
   ): Promise<ConversationsV1Credential> {
     return this.t.request<ConversationsV1Credential>({
       method: 'POST',
-      path: `/v1/Credentials/${sid}`,
+      path: route`/v1/Credentials/${sid}`,
       form: body,
     });
   }
@@ -654,7 +655,7 @@ export class ConversationsV1CredentialsResource {
   async delete(sid: string): Promise<void> {
     await this.t.request<void>({
       method: 'DELETE',
-      path: `/v1/Credentials/${sid}`,
+      path: route`/v1/Credentials/${sid}`,
     });
   }
 }
@@ -670,14 +671,14 @@ export class ConversationsV1ConfigurationWebhooksResource {
     this.t = transport;
   }
 
-  fetch(): Promise<ConversationsV1ConfigurationWebhook> {
+  async fetch(): Promise<ConversationsV1ConfigurationWebhook> {
     return this.t.request<ConversationsV1ConfigurationWebhook>({
       method: 'GET',
       path: '/v1/Configuration/Webhooks',
     });
   }
 
-  update(
+  async update(
     body: UpdateConversationsV1ConfigurationWebhookRequest,
   ): Promise<ConversationsV1ConfigurationWebhook> {
     return this.t.request<ConversationsV1ConfigurationWebhook>({
@@ -695,7 +696,7 @@ export class ConversationsV1ConfigurationAddressesResource {
     this.t = transport;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1ConfigAddressList> {
     return this.t.request<ConversationsV1ConfigAddressList>({
@@ -705,7 +706,7 @@ export class ConversationsV1ConfigurationAddressesResource {
     });
   }
 
-  create(
+  async create(
     body: CreateConversationsV1ConfigAddressRequest,
   ): Promise<ConversationsV1ConfigAddress> {
     return this.t.request<ConversationsV1ConfigAddress>({
@@ -715,20 +716,20 @@ export class ConversationsV1ConfigurationAddressesResource {
     });
   }
 
-  fetch(sid: string): Promise<ConversationsV1ConfigAddress> {
+  async fetch(sid: string): Promise<ConversationsV1ConfigAddress> {
     return this.t.request<ConversationsV1ConfigAddress>({
       method: 'GET',
-      path: `/v1/Configuration/Addresses/${sid}`,
+      path: route`/v1/Configuration/Addresses/${sid}`,
     });
   }
 
-  update(
+  async update(
     sid: string,
     body: UpdateConversationsV1ConfigAddressRequest,
   ): Promise<ConversationsV1ConfigAddress> {
     return this.t.request<ConversationsV1ConfigAddress>({
       method: 'POST',
-      path: `/v1/Configuration/Addresses/${sid}`,
+      path: route`/v1/Configuration/Addresses/${sid}`,
       form: body,
     });
   }
@@ -736,7 +737,7 @@ export class ConversationsV1ConfigurationAddressesResource {
   async delete(sid: string): Promise<void> {
     await this.t.request<void>({
       method: 'DELETE',
-      path: `/v1/Configuration/Addresses/${sid}`,
+      path: route`/v1/Configuration/Addresses/${sid}`,
     });
   }
 }
@@ -752,14 +753,14 @@ export class ConversationsV1ConfigurationResource {
     this.addresses = new ConversationsV1ConfigurationAddressesResource(transport);
   }
 
-  fetch(): Promise<ConversationsV1Configuration> {
+  async fetch(): Promise<ConversationsV1Configuration> {
     return this.t.request<ConversationsV1Configuration>({
       method: 'GET',
       path: '/v1/Configuration',
     });
   }
 
-  update(
+  async update(
     body: UpdateConversationsV1ConfigurationRequest,
   ): Promise<ConversationsV1Configuration> {
     return this.t.request<ConversationsV1Configuration>({
@@ -781,7 +782,7 @@ export class ConversationsV1ParticipantConversationsResource {
     this.t = transport;
   }
 
-  list(
+  async list(
     params: ListConversationsV1ParticipantConversationParams = {},
   ): Promise<ConversationsV1ParticipantConversationList> {
     return this.t.request<ConversationsV1ParticipantConversationList>({
@@ -799,7 +800,7 @@ export class ConversationsV1ConversationWithParticipantsResource {
     this.t = transport;
   }
 
-  create(
+  async create(
     body: CreateConversationsV1ConversationWithParticipantsRequest,
   ): Promise<ConversationsV1ConversationWithParticipants> {
     return this.t.request<ConversationsV1ConversationWithParticipants>({
@@ -811,7 +812,7 @@ export class ConversationsV1ConversationWithParticipantsResource {
 }
 
 // ===========================================================================
-// /v1/Services + service-scoped Phase 4 surface
+// /v1/Services + service-scoped resources
 // ===========================================================================
 
 // ---------------------------------------------------------------------------
@@ -842,12 +843,12 @@ export class ConversationsV1ServiceConversationMessageReceiptsResource {
 
   private root(tail?: string): string {
     const base =
-      `/v1/Services/${this.chatServiceSid}/Conversations/${this.conversationSid}` +
-      `/Messages/${this.messageSid}/Receipts`;
-    return tail ? `${base}/${tail}` : base;
+      route`/v1/Services/${this.chatServiceSid}/Conversations/${this.conversationSid}` +
+      route`/Messages/${this.messageSid}/Receipts`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1ServiceConversationMessageReceiptList> {
     return this.t.request<ConversationsV1ServiceConversationMessageReceiptList>({
@@ -857,7 +858,7 @@ export class ConversationsV1ServiceConversationMessageReceiptsResource {
     });
   }
 
-  fetch(sid: string): Promise<ConversationsV1ServiceConversationMessageReceipt> {
+  async fetch(sid: string): Promise<ConversationsV1ServiceConversationMessageReceipt> {
     return this.t.request<ConversationsV1ServiceConversationMessageReceipt>({
       method: 'GET',
       path: this.root(sid),
@@ -882,11 +883,11 @@ export class ConversationsV1ServiceConversationMessagesResource {
 
   private root(tail?: string): string {
     const base =
-      `/v1/Services/${this.chatServiceSid}/Conversations/${this.conversationSid}/Messages`;
-    return tail ? `${base}/${tail}` : base;
+      route`/v1/Services/${this.chatServiceSid}/Conversations/${this.conversationSid}/Messages`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1ServiceConversationMessageList> {
     return this.t.request<ConversationsV1ServiceConversationMessageList>({
@@ -896,7 +897,7 @@ export class ConversationsV1ServiceConversationMessagesResource {
     });
   }
 
-  create(
+  async create(
     body: CreateConversationsV1ServiceConversationMessageRequest,
   ): Promise<ConversationsV1ServiceConversationMessage> {
     return this.t.request<ConversationsV1ServiceConversationMessage>({
@@ -906,14 +907,14 @@ export class ConversationsV1ServiceConversationMessagesResource {
     });
   }
 
-  fetch(messageSid: string): Promise<ConversationsV1ServiceConversationMessage> {
+  async fetch(messageSid: string): Promise<ConversationsV1ServiceConversationMessage> {
     return this.t.request<ConversationsV1ServiceConversationMessage>({
       method: 'GET',
       path: this.root(messageSid),
     });
   }
 
-  update(
+  async update(
     messageSid: string,
     body: UpdateConversationsV1ServiceConversationMessageRequest,
   ): Promise<ConversationsV1ServiceConversationMessage> {
@@ -961,11 +962,11 @@ export class ConversationsV1ServiceConversationParticipantsResource {
 
   private root(tail?: string): string {
     const base =
-      `/v1/Services/${this.chatServiceSid}/Conversations/${this.conversationSid}/Participants`;
-    return tail ? `${base}/${tail}` : base;
+      route`/v1/Services/${this.chatServiceSid}/Conversations/${this.conversationSid}/Participants`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1ServiceConversationParticipantList> {
     return this.t.request<ConversationsV1ServiceConversationParticipantList>({
@@ -975,7 +976,7 @@ export class ConversationsV1ServiceConversationParticipantsResource {
     });
   }
 
-  create(
+  async create(
     body: CreateConversationsV1ServiceConversationParticipantRequest,
   ): Promise<ConversationsV1ServiceConversationParticipant> {
     return this.t.request<ConversationsV1ServiceConversationParticipant>({
@@ -985,7 +986,7 @@ export class ConversationsV1ServiceConversationParticipantsResource {
     });
   }
 
-  fetch(
+  async fetch(
     participantSid: string,
   ): Promise<ConversationsV1ServiceConversationParticipant> {
     return this.t.request<ConversationsV1ServiceConversationParticipant>({
@@ -994,7 +995,7 @@ export class ConversationsV1ServiceConversationParticipantsResource {
     });
   }
 
-  update(
+  async update(
     participantSid: string,
     body: UpdateConversationsV1ServiceConversationParticipantRequest,
   ): Promise<ConversationsV1ServiceConversationParticipant> {
@@ -1030,11 +1031,11 @@ export class ConversationsV1ServiceConversationWebhooksResource {
 
   private root(tail?: string): string {
     const base =
-      `/v1/Services/${this.chatServiceSid}/Conversations/${this.conversationSid}/Webhooks`;
-    return tail ? `${base}/${tail}` : base;
+      route`/v1/Services/${this.chatServiceSid}/Conversations/${this.conversationSid}/Webhooks`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1ServiceConversationScopedWebhookList> {
     return this.t.request<ConversationsV1ServiceConversationScopedWebhookList>({
@@ -1044,7 +1045,7 @@ export class ConversationsV1ServiceConversationWebhooksResource {
     });
   }
 
-  create(
+  async create(
     body: CreateConversationsV1ServiceConversationScopedWebhookRequest,
   ): Promise<ConversationsV1ServiceConversationScopedWebhook> {
     return this.t.request<ConversationsV1ServiceConversationScopedWebhook>({
@@ -1054,7 +1055,7 @@ export class ConversationsV1ServiceConversationWebhooksResource {
     });
   }
 
-  fetch(
+  async fetch(
     webhookSid: string,
   ): Promise<ConversationsV1ServiceConversationScopedWebhook> {
     return this.t.request<ConversationsV1ServiceConversationScopedWebhook>({
@@ -1063,7 +1064,7 @@ export class ConversationsV1ServiceConversationWebhooksResource {
     });
   }
 
-  update(
+  async update(
     webhookSid: string,
     body: UpdateConversationsV1ServiceConversationScopedWebhookRequest,
   ): Promise<ConversationsV1ServiceConversationScopedWebhook> {
@@ -1096,11 +1097,11 @@ export class ConversationsV1ServiceConversationsResource {
   }
 
   private root(tail?: string): string {
-    const base = `/v1/Services/${this.chatServiceSid}/Conversations`;
-    return tail ? `${base}/${tail}` : base;
+    const base = route`/v1/Services/${this.chatServiceSid}/Conversations`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1ServiceConversationList> {
     return this.t.request<ConversationsV1ServiceConversationList>({
@@ -1110,7 +1111,7 @@ export class ConversationsV1ServiceConversationsResource {
     });
   }
 
-  create(
+  async create(
     body: CreateConversationsV1ServiceConversationRequest,
   ): Promise<ConversationsV1ServiceConversation> {
     return this.t.request<ConversationsV1ServiceConversation>({
@@ -1120,14 +1121,14 @@ export class ConversationsV1ServiceConversationsResource {
     });
   }
 
-  fetch(conversationSid: string): Promise<ConversationsV1ServiceConversation> {
+  async fetch(conversationSid: string): Promise<ConversationsV1ServiceConversation> {
     return this.t.request<ConversationsV1ServiceConversation>({
       method: 'GET',
       path: this.root(conversationSid),
     });
   }
 
-  update(
+  async update(
     conversationSid: string,
     body: UpdateConversationsV1ServiceConversationRequest,
   ): Promise<ConversationsV1ServiceConversation> {
@@ -1193,11 +1194,11 @@ export class ConversationsV1ServiceRolesResource {
   }
 
   private root(tail?: string): string {
-    const base = `/v1/Services/${this.chatServiceSid}/Roles`;
-    return tail ? `${base}/${tail}` : base;
+    const base = route`/v1/Services/${this.chatServiceSid}/Roles`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1ServiceRoleList> {
     return this.t.request<ConversationsV1ServiceRoleList>({
@@ -1207,7 +1208,7 @@ export class ConversationsV1ServiceRolesResource {
     });
   }
 
-  create(
+  async create(
     body: CreateConversationsV1ServiceRoleRequest,
   ): Promise<ConversationsV1ServiceRole> {
     return this.t.request<ConversationsV1ServiceRole>({
@@ -1217,14 +1218,14 @@ export class ConversationsV1ServiceRolesResource {
     });
   }
 
-  fetch(sid: string): Promise<ConversationsV1ServiceRole> {
+  async fetch(sid: string): Promise<ConversationsV1ServiceRole> {
     return this.t.request<ConversationsV1ServiceRole>({
       method: 'GET',
       path: this.root(sid),
     });
   }
 
-  update(
+  async update(
     sid: string,
     body: UpdateConversationsV1ServiceRoleRequest,
   ): Promise<ConversationsV1ServiceRole> {
@@ -1255,12 +1256,12 @@ export class ConversationsV1ServiceUserConversationsResource {
     this.userSid = userSid;
   }
 
-  list(
+  async list(
     params: ListConversationsV1PageParams = {},
   ): Promise<ConversationsV1ServiceUserConversationList> {
     return this.t.request<ConversationsV1ServiceUserConversationList>({
       method: 'GET',
-      path: `/v1/Services/${this.chatServiceSid}/Users/${this.userSid}/Conversations`,
+      path: route`/v1/Services/${this.chatServiceSid}/Users/${this.userSid}/Conversations`,
       params,
     });
   }
@@ -1305,7 +1306,7 @@ function makeServiceUsersCallable(
   transport: Transport,
   chatServiceSid: string,
 ): ConversationsV1ServiceUsersCallable {
-  const base = `/v1/Services/${chatServiceSid}/Users`;
+  const base = route`/v1/Services/${chatServiceSid}/Users`;
   const fn = ((sid: string) =>
     new ConversationsV1ServiceUserScoped(
       transport,
@@ -1313,37 +1314,37 @@ function makeServiceUsersCallable(
       sid,
     )) as ConversationsV1ServiceUsersCallable;
 
-  fn.list = (params: ListConversationsV1PageParams = {}) =>
+  fn.list = async (params: ListConversationsV1PageParams = {}) =>
     transport.request<ConversationsV1ServiceUserList>({
       method: 'GET',
       path: base,
       params,
     });
 
-  fn.create = (body: CreateConversationsV1ServiceUserRequest) =>
+  fn.create = async (body: CreateConversationsV1ServiceUserRequest) =>
     transport.request<ConversationsV1ServiceUser>({
       method: 'POST',
       path: base,
       form: body,
     });
 
-  fn.fetch = (sid: string) =>
+  fn.fetch = async (sid: string) =>
     transport.request<ConversationsV1ServiceUser>({
       method: 'GET',
-      path: `${base}/${sid}`,
+      path: `${base}/${encodePathSegment(sid)}`,
     });
 
-  fn.update = (sid: string, body: UpdateConversationsV1ServiceUserRequest) =>
+  fn.update = async (sid: string, body: UpdateConversationsV1ServiceUserRequest) =>
     transport.request<ConversationsV1ServiceUser>({
       method: 'POST',
-      path: `${base}/${sid}`,
+      path: `${base}/${encodePathSegment(sid)}`,
       form: body,
     });
 
   fn.delete = async (sid: string) => {
     await transport.request<void>({
       method: 'DELETE',
-      path: `${base}/${sid}`,
+      path: `${base}/${encodePathSegment(sid)}`,
     });
   };
 
@@ -1364,11 +1365,11 @@ export class ConversationsV1ServiceBindingsResource {
   }
 
   private root(tail?: string): string {
-    const base = `/v1/Services/${this.chatServiceSid}/Bindings`;
-    return tail ? `${base}/${tail}` : base;
+    const base = route`/v1/Services/${this.chatServiceSid}/Bindings`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(
+  async list(
     params: ListConversationsV1ServiceBindingParams = {},
   ): Promise<ConversationsV1ServiceBindingList> {
     return this.t.request<ConversationsV1ServiceBindingList>({
@@ -1378,7 +1379,7 @@ export class ConversationsV1ServiceBindingsResource {
     });
   }
 
-  fetch(sid: string): Promise<ConversationsV1ServiceBinding> {
+  async fetch(sid: string): Promise<ConversationsV1ServiceBinding> {
     return this.t.request<ConversationsV1ServiceBinding>({
       method: 'GET',
       path: this.root(sid),
@@ -1407,17 +1408,17 @@ export class ConversationsV1ServiceNotificationsResource {
   }
 
   private root(): string {
-    return `/v1/Services/${this.chatServiceSid}/Configuration/Notifications`;
+    return route`/v1/Services/${this.chatServiceSid}/Configuration/Notifications`;
   }
 
-  fetch(): Promise<ConversationsV1ServiceNotification> {
+  async fetch(): Promise<ConversationsV1ServiceNotification> {
     return this.t.request<ConversationsV1ServiceNotification>({
       method: 'GET',
       path: this.root(),
     });
   }
 
-  update(
+  async update(
     body: UpdateConversationsV1ServiceNotificationRequest,
   ): Promise<ConversationsV1ServiceNotification> {
     return this.t.request<ConversationsV1ServiceNotification>({
@@ -1438,17 +1439,17 @@ export class ConversationsV1ServiceWebhookConfigurationResource {
   }
 
   private root(): string {
-    return `/v1/Services/${this.chatServiceSid}/Configuration/Webhooks`;
+    return route`/v1/Services/${this.chatServiceSid}/Configuration/Webhooks`;
   }
 
-  fetch(): Promise<ConversationsV1ServiceWebhookConfiguration> {
+  async fetch(): Promise<ConversationsV1ServiceWebhookConfiguration> {
     return this.t.request<ConversationsV1ServiceWebhookConfiguration>({
       method: 'GET',
       path: this.root(),
     });
   }
 
-  update(
+  async update(
     body: UpdateConversationsV1ServiceWebhookConfigurationRequest,
   ): Promise<ConversationsV1ServiceWebhookConfiguration> {
     return this.t.request<ConversationsV1ServiceWebhookConfiguration>({
@@ -1479,17 +1480,17 @@ export class ConversationsV1ServiceConfigurationResource {
   }
 
   private root(): string {
-    return `/v1/Services/${this.chatServiceSid}/Configuration`;
+    return route`/v1/Services/${this.chatServiceSid}/Configuration`;
   }
 
-  fetch(): Promise<ConversationsV1ServiceConfiguration> {
+  async fetch(): Promise<ConversationsV1ServiceConfiguration> {
     return this.t.request<ConversationsV1ServiceConfiguration>({
       method: 'GET',
       path: this.root(),
     });
   }
 
-  update(
+  async update(
     body: UpdateConversationsV1ServiceConfigurationRequest,
   ): Promise<ConversationsV1ServiceConfiguration> {
     return this.t.request<ConversationsV1ServiceConfiguration>({
@@ -1513,12 +1514,12 @@ export class ConversationsV1ServiceParticipantConversationsResource {
     this.chatServiceSid = chatServiceSid;
   }
 
-  list(
+  async list(
     params: ListConversationsV1ServiceParticipantConversationParams = {},
   ): Promise<ConversationsV1ServiceParticipantConversationList> {
     return this.t.request<ConversationsV1ServiceParticipantConversationList>({
       method: 'GET',
-      path: `/v1/Services/${this.chatServiceSid}/ParticipantConversations`,
+      path: route`/v1/Services/${this.chatServiceSid}/ParticipantConversations`,
       params,
     });
   }
@@ -1533,12 +1534,12 @@ export class ConversationsV1ServiceConversationWithParticipantsResource {
     this.chatServiceSid = chatServiceSid;
   }
 
-  create(
+  async create(
     body: CreateConversationsV1ServiceConversationWithParticipantsRequest,
   ): Promise<ConversationsV1ServiceConversationWithParticipants> {
     return this.t.request<ConversationsV1ServiceConversationWithParticipants>({
       method: 'POST',
-      path: `/v1/Services/${this.chatServiceSid}/ConversationWithParticipants`,
+      path: route`/v1/Services/${this.chatServiceSid}/ConversationWithParticipants`,
       form: body,
     });
   }
@@ -1551,7 +1552,7 @@ export class ConversationsV1ServiceConversationWithParticipantsResource {
 /**
  * Per-service scope returned by `client.conversationsV1.services(chatServiceSid)`.
  *
- * Carries the 14 service-scoped sub-resource families of Phase 4.
+ * Carries the 14 service-scoped sub-resource families.
  */
 export class ConversationsV1ServiceScopeResource {
   readonly conversations: ConversationsV1ServiceConversationsResource;
@@ -1598,7 +1599,7 @@ export class ConversationsV1ServiceScopeResource {
  * Shape of `client.conversationsV1.services`:
  *
  * - **Callable**: `services(chatServiceSid)` returns a
- *   {@link ConversationsV1ServiceScopeResource} carrying the 14 Phase 4
+ *   {@link ConversationsV1ServiceScopeResource} carrying the 14
  *   sub-resource families.
  * - **Methods**: account-level CRUD on `/v1/Services` (`.list/.create/.fetch/.delete`).
  *
@@ -1620,30 +1621,30 @@ function makeServicesCallable(transport: Transport): ConversationsV1ServicesCall
       chatServiceSid,
     )) as ConversationsV1ServicesCallable;
 
-  fn.list = (params: ListConversationsV1PageParams = {}) =>
+  fn.list = async (params: ListConversationsV1PageParams = {}) =>
     transport.request<ConversationsV1ServiceList>({
       method: 'GET',
       path: '/v1/Services',
       params,
     });
 
-  fn.create = (body: CreateConversationsV1ServiceRequest) =>
+  fn.create = async (body: CreateConversationsV1ServiceRequest) =>
     transport.request<ConversationsV1Service>({
       method: 'POST',
       path: '/v1/Services',
       form: body,
     });
 
-  fn.fetch = (chatServiceSid: string) =>
+  fn.fetch = async (chatServiceSid: string) =>
     transport.request<ConversationsV1Service>({
       method: 'GET',
-      path: `/v1/Services/${chatServiceSid}`,
+      path: route`/v1/Services/${chatServiceSid}`,
     });
 
   fn.delete = async (chatServiceSid: string) => {
     await transport.request<void>({
       method: 'DELETE',
-      path: `/v1/Services/${chatServiceSid}`,
+      path: route`/v1/Services/${chatServiceSid}`,
     });
   };
 

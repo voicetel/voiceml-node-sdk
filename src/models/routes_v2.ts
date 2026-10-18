@@ -1,17 +1,17 @@
 /**
- * SIP-domain Inbound Processing Region binding. Twilio's routes/v2 surface.
+ * SIP-domain Inbound Processing Region binding (Twilio-compatible Routes v2).
  * SID is `QQ…` (32 hex). Keyed by the registrable SIP domain name (not the
  * `SD…` SipDomain SID).
  */
 export interface RoutesV2SipDomain {
-  sid: string;
-  sip_domain: string;
-  account_sid: string;
-  friendly_name: string | null;
-  voice_region: string | null;
-  url: string | null;
-  date_created: string;
-  date_updated: string;
+  sid: string | null;
+  sip_domain: string | null;
+  account_sid: string | null;
+  friendly_name?: string | null;
+  voice_region?: string | null;
+  url?: string | null;
+  date_created: string | null;
+  date_updated: string | null;
 }
 
 /** Body for `POST /v2/SipDomains/{SipDomain}`. All fields optional. */
@@ -21,18 +21,18 @@ export interface UpdateRoutesV2SipDomainRequest {
 }
 
 /**
- * Phone-number Inbound Processing Region binding. Twilio's routes/v2 surface.
+ * Phone-number Inbound Processing Region binding (Twilio-compatible Routes v2).
  * SID is `QQ…` (32 hex). Keyed by the E.164 phone number (or its `PN…` sid).
  */
 export interface RoutesV2PhoneNumber {
-  sid: string;
-  phone_number: string;
-  account_sid: string;
-  friendly_name: string | null;
-  voice_region: string | null;
-  url: string | null;
-  date_created: string;
-  date_updated: string;
+  sid: string | null;
+  phone_number: string | null;
+  account_sid: string | null;
+  friendly_name?: string | null;
+  voice_region?: string | null;
+  url?: string | null;
+  date_created: string | null;
+  date_updated: string | null;
 }
 
 /** Body for `POST /v2/PhoneNumbers/{PhoneNumber}`. All fields optional. */

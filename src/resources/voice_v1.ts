@@ -1,3 +1,4 @@
+import { encodePathSegment, route } from '../encoding.js';
 import type {
   CreateVoiceV1ByocTrunkRequest,
   CreateVoiceV1ConnectionPolicyRequest,
@@ -26,7 +27,7 @@ import type {
 import type { Transport } from '../transport.js';
 
 /**
- * `client.voiceV1.*` — Twilio Voice v1 surface.
+ * `client.voiceV1.*` — Twilio-compatible Voice v1 API.
  *
  * The `/v1/` namespace sits outside the `/2010-04-01/Accounts/.../` prefix.
  * The account is resolved from HTTP Basic auth.
@@ -63,7 +64,7 @@ export class VoiceV1IpRecordsResource {
     this.t = transport;
   }
 
-  list(params: ListVoiceV1PageParams = {}): Promise<VoiceV1IpRecordList> {
+  async list(params: ListVoiceV1PageParams = {}): Promise<VoiceV1IpRecordList> {
     return this.t.request<VoiceV1IpRecordList>({
       method: 'GET',
       path: '/v1/IpRecords',
@@ -71,7 +72,7 @@ export class VoiceV1IpRecordsResource {
     });
   }
 
-  create(body: CreateVoiceV1IpRecordRequest): Promise<VoiceV1IpRecord> {
+  async create(body: CreateVoiceV1IpRecordRequest): Promise<VoiceV1IpRecord> {
     return this.t.request<VoiceV1IpRecord>({
       method: 'POST',
       path: '/v1/IpRecords',
@@ -79,17 +80,17 @@ export class VoiceV1IpRecordsResource {
     });
   }
 
-  fetch(sid: string): Promise<VoiceV1IpRecord> {
+  async fetch(sid: string): Promise<VoiceV1IpRecord> {
     return this.t.request<VoiceV1IpRecord>({
       method: 'GET',
-      path: `/v1/IpRecords/${sid}`,
+      path: route`/v1/IpRecords/${sid}`,
     });
   }
 
-  update(sid: string, body: UpdateVoiceV1IpRecordRequest): Promise<VoiceV1IpRecord> {
+  async update(sid: string, body: UpdateVoiceV1IpRecordRequest): Promise<VoiceV1IpRecord> {
     return this.t.request<VoiceV1IpRecord>({
       method: 'POST',
-      path: `/v1/IpRecords/${sid}`,
+      path: route`/v1/IpRecords/${sid}`,
       form: body,
     });
   }
@@ -97,7 +98,7 @@ export class VoiceV1IpRecordsResource {
   async delete(sid: string): Promise<void> {
     await this.t.request<void>({
       method: 'DELETE',
-      path: `/v1/IpRecords/${sid}`,
+      path: route`/v1/IpRecords/${sid}`,
     });
   }
 }
@@ -113,7 +114,7 @@ export class VoiceV1SourceIpMappingsResource {
     this.t = transport;
   }
 
-  list(params: ListVoiceV1PageParams = {}): Promise<VoiceV1SourceIpMappingList> {
+  async list(params: ListVoiceV1PageParams = {}): Promise<VoiceV1SourceIpMappingList> {
     return this.t.request<VoiceV1SourceIpMappingList>({
       method: 'GET',
       path: '/v1/SourceIpMappings',
@@ -121,7 +122,7 @@ export class VoiceV1SourceIpMappingsResource {
     });
   }
 
-  create(body: CreateVoiceV1SourceIpMappingRequest): Promise<VoiceV1SourceIpMapping> {
+  async create(body: CreateVoiceV1SourceIpMappingRequest): Promise<VoiceV1SourceIpMapping> {
     return this.t.request<VoiceV1SourceIpMapping>({
       method: 'POST',
       path: '/v1/SourceIpMappings',
@@ -129,20 +130,20 @@ export class VoiceV1SourceIpMappingsResource {
     });
   }
 
-  fetch(sid: string): Promise<VoiceV1SourceIpMapping> {
+  async fetch(sid: string): Promise<VoiceV1SourceIpMapping> {
     return this.t.request<VoiceV1SourceIpMapping>({
       method: 'GET',
-      path: `/v1/SourceIpMappings/${sid}`,
+      path: route`/v1/SourceIpMappings/${sid}`,
     });
   }
 
-  update(
+  async update(
     sid: string,
     body: UpdateVoiceV1SourceIpMappingRequest,
   ): Promise<VoiceV1SourceIpMapping> {
     return this.t.request<VoiceV1SourceIpMapping>({
       method: 'POST',
-      path: `/v1/SourceIpMappings/${sid}`,
+      path: route`/v1/SourceIpMappings/${sid}`,
       form: body,
     });
   }
@@ -150,7 +151,7 @@ export class VoiceV1SourceIpMappingsResource {
   async delete(sid: string): Promise<void> {
     await this.t.request<void>({
       method: 'DELETE',
-      path: `/v1/SourceIpMappings/${sid}`,
+      path: route`/v1/SourceIpMappings/${sid}`,
     });
   }
 }
@@ -166,7 +167,7 @@ export class VoiceV1ByocTrunksResource {
     this.t = transport;
   }
 
-  list(params: ListVoiceV1PageParams = {}): Promise<VoiceV1ByocTrunkList> {
+  async list(params: ListVoiceV1PageParams = {}): Promise<VoiceV1ByocTrunkList> {
     return this.t.request<VoiceV1ByocTrunkList>({
       method: 'GET',
       path: '/v1/ByocTrunks',
@@ -174,7 +175,7 @@ export class VoiceV1ByocTrunksResource {
     });
   }
 
-  create(body: CreateVoiceV1ByocTrunkRequest): Promise<VoiceV1ByocTrunk> {
+  async create(body: CreateVoiceV1ByocTrunkRequest): Promise<VoiceV1ByocTrunk> {
     return this.t.request<VoiceV1ByocTrunk>({
       method: 'POST',
       path: '/v1/ByocTrunks',
@@ -182,17 +183,17 @@ export class VoiceV1ByocTrunksResource {
     });
   }
 
-  fetch(sid: string): Promise<VoiceV1ByocTrunk> {
+  async fetch(sid: string): Promise<VoiceV1ByocTrunk> {
     return this.t.request<VoiceV1ByocTrunk>({
       method: 'GET',
-      path: `/v1/ByocTrunks/${sid}`,
+      path: route`/v1/ByocTrunks/${sid}`,
     });
   }
 
-  update(sid: string, body: UpdateVoiceV1ByocTrunkRequest): Promise<VoiceV1ByocTrunk> {
+  async update(sid: string, body: UpdateVoiceV1ByocTrunkRequest): Promise<VoiceV1ByocTrunk> {
     return this.t.request<VoiceV1ByocTrunk>({
       method: 'POST',
-      path: `/v1/ByocTrunks/${sid}`,
+      path: route`/v1/ByocTrunks/${sid}`,
       form: body,
     });
   }
@@ -200,7 +201,7 @@ export class VoiceV1ByocTrunksResource {
   async delete(sid: string): Promise<void> {
     await this.t.request<void>({
       method: 'DELETE',
-      path: `/v1/ByocTrunks/${sid}`,
+      path: route`/v1/ByocTrunks/${sid}`,
     });
   }
 }
@@ -219,11 +220,11 @@ export class VoiceV1ConnectionPolicyTargetsResource {
   }
 
   private root(tail?: string): string {
-    const base = `/v1/ConnectionPolicies/${this.policySid}/Targets`;
-    return tail ? `${base}/${tail}` : base;
+    const base = route`/v1/ConnectionPolicies/${this.policySid}/Targets`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(params: ListVoiceV1PageParams = {}): Promise<VoiceV1ConnectionPolicyTargetList> {
+  async list(params: ListVoiceV1PageParams = {}): Promise<VoiceV1ConnectionPolicyTargetList> {
     return this.t.request<VoiceV1ConnectionPolicyTargetList>({
       method: 'GET',
       path: this.root(),
@@ -231,7 +232,7 @@ export class VoiceV1ConnectionPolicyTargetsResource {
     });
   }
 
-  create(
+  async create(
     body: CreateVoiceV1ConnectionPolicyTargetRequest,
   ): Promise<VoiceV1ConnectionPolicyTarget> {
     return this.t.request<VoiceV1ConnectionPolicyTarget>({
@@ -241,14 +242,14 @@ export class VoiceV1ConnectionPolicyTargetsResource {
     });
   }
 
-  fetch(targetSid: string): Promise<VoiceV1ConnectionPolicyTarget> {
+  async fetch(targetSid: string): Promise<VoiceV1ConnectionPolicyTarget> {
     return this.t.request<VoiceV1ConnectionPolicyTarget>({
       method: 'GET',
       path: this.root(targetSid),
     });
   }
 
-  update(
+  async update(
     targetSid: string,
     body: UpdateVoiceV1ConnectionPolicyTargetRequest,
   ): Promise<VoiceV1ConnectionPolicyTarget> {
@@ -283,19 +284,19 @@ export class VoiceV1ConnectionPolicyScoped {
     this.targets = new VoiceV1ConnectionPolicyTargetsResource(transport, sid);
   }
 
-  fetch(): Promise<VoiceV1ConnectionPolicy> {
+  async fetch(): Promise<VoiceV1ConnectionPolicy> {
     return this.t.request<VoiceV1ConnectionPolicy>({
       method: 'GET',
-      path: `/v1/ConnectionPolicies/${this.sid}`,
+      path: route`/v1/ConnectionPolicies/${this.sid}`,
     });
   }
 
-  update(
+  async update(
     body: UpdateVoiceV1ConnectionPolicyRequest,
   ): Promise<VoiceV1ConnectionPolicy> {
     return this.t.request<VoiceV1ConnectionPolicy>({
       method: 'POST',
-      path: `/v1/ConnectionPolicies/${this.sid}`,
+      path: route`/v1/ConnectionPolicies/${this.sid}`,
       form: body,
     });
   }
@@ -303,7 +304,7 @@ export class VoiceV1ConnectionPolicyScoped {
   async delete(): Promise<void> {
     await this.t.request<void>({
       method: 'DELETE',
-      path: `/v1/ConnectionPolicies/${this.sid}`,
+      path: route`/v1/ConnectionPolicies/${this.sid}`,
     });
   }
 }
@@ -339,37 +340,37 @@ function makeConnectionPoliciesCallable(
   const fn = ((sid: string) =>
     new VoiceV1ConnectionPolicyScoped(transport, sid)) as VoiceV1ConnectionPoliciesCallable;
 
-  fn.list = (params: ListVoiceV1PageParams = {}) =>
+  fn.list = async (params: ListVoiceV1PageParams = {}) =>
     transport.request<VoiceV1ConnectionPolicyList>({
       method: 'GET',
       path: '/v1/ConnectionPolicies',
       params,
     });
 
-  fn.create = (body: CreateVoiceV1ConnectionPolicyRequest) =>
+  fn.create = async (body: CreateVoiceV1ConnectionPolicyRequest) =>
     transport.request<VoiceV1ConnectionPolicy>({
       method: 'POST',
       path: '/v1/ConnectionPolicies',
       form: body,
     });
 
-  fn.fetch = (sid: string) =>
+  fn.fetch = async (sid: string) =>
     transport.request<VoiceV1ConnectionPolicy>({
       method: 'GET',
-      path: `/v1/ConnectionPolicies/${sid}`,
+      path: route`/v1/ConnectionPolicies/${sid}`,
     });
 
-  fn.update = (sid: string, body: UpdateVoiceV1ConnectionPolicyRequest) =>
+  fn.update = async (sid: string, body: UpdateVoiceV1ConnectionPolicyRequest) =>
     transport.request<VoiceV1ConnectionPolicy>({
       method: 'POST',
-      path: `/v1/ConnectionPolicies/${sid}`,
+      path: route`/v1/ConnectionPolicies/${sid}`,
       form: body,
     });
 
   fn.delete = async (sid: string) => {
     await transport.request<void>({
       method: 'DELETE',
-      path: `/v1/ConnectionPolicies/${sid}`,
+      path: route`/v1/ConnectionPolicies/${sid}`,
     });
   };
 
@@ -387,14 +388,14 @@ export class VoiceV1SettingsResource {
     this.t = transport;
   }
 
-  fetch(): Promise<VoiceV1DialingPermissionsSettings> {
+  async fetch(): Promise<VoiceV1DialingPermissionsSettings> {
     return this.t.request<VoiceV1DialingPermissionsSettings>({
       method: 'GET',
       path: '/v1/Settings',
     });
   }
 
-  update(
+  async update(
     body: UpdateVoiceV1DialingPermissionsSettingsRequest,
   ): Promise<VoiceV1DialingPermissionsSettings> {
     return this.t.request<VoiceV1DialingPermissionsSettings>({

@@ -1,4 +1,5 @@
-import type { PageEnvelope } from './common.js';
+import type { HttpMethod, Open, PageEnvelope } from './common.js';
+import type { CallStatusCallbackEvent } from './calls.js';
 
 export type ConferenceStatus = 'init' | 'in-progress' | 'completed';
 export type ParticipantStatus =
@@ -12,18 +13,18 @@ export type ParticipantStatus =
   | 'completed';
 
 export interface Conference {
-  sid: string;
-  account_sid: string;
-  friendly_name: string;
-  status: ConferenceStatus;
-  region?: string;
-  api_version: string;
-  uri: string;
-  date_created?: string;
-  date_updated?: string;
+  sid: string | null;
+  account_sid: string | null;
+  friendly_name: string | null;
+  status: Open<ConferenceStatus>;
+  region?: string | null;
+  api_version: string | null;
+  uri: string | null;
+  date_created?: string | null;
+  date_updated?: string | null;
   reason_conference_ended?: string;
-  call_sid_ending_conference?: string;
-  subresource_uris?: Record<string, string>;
+  call_sid_ending_conference?: string | null;
+  subresource_uris?: Record<string, string> | null;
   /** VoiceML extension — count of current participants. */
   member_count?: number;
 }
@@ -33,24 +34,25 @@ export interface ConferenceList extends PageEnvelope {
 }
 
 export interface Participant {
-  call_sid: string;
-  conference_sid: string;
-  account_sid: string;
-  muted: boolean;
-  hold: boolean;
-  coaching: boolean;
+  call_sid: string | null;
+  conference_sid: string | null;
+  account_sid: string | null;
+  muted: boolean | null;
+  hold: boolean | null;
+  coaching: boolean | null;
   /** Set when `coaching` is true — the participant this coach can speak to. */
-  call_sid_to_coach?: string;
+  call_sid_to_coach?: string | null;
   /** Pre-join queue wait in seconds (Twilio string wire shape). */
-  queue_time: string;
-  start_conference_on_enter: boolean;
-  end_conference_on_exit: boolean;
-  status: ParticipantStatus;
-  label?: string;
-  api_version: string;
-  uri: string;
-  date_created?: string;
-  date_updated?: string;
+  queue_time: string | null;
+  start_conference_on_enter: boolean | null;
+  end_conference_on_exit: boolean | null;
+  status: Open<ParticipantStatus>;
+  label?: string | null;
+  /** @deprecated Not part of the current API response; the server no longer emits it. */
+  api_version?: string;
+  uri: string | null;
+  date_created?: string | null;
+  date_updated?: string | null;
 }
 
 export interface ParticipantList extends PageEnvelope {
@@ -78,25 +80,26 @@ export interface CreateParticipantRequest {
   EndConferenceOnExit?: boolean;
   Timeout?: number;
   StatusCallback?: string;
-  StatusCallbackMethod?: string;
-  StatusCallbackEvent?: string;
+  StatusCallbackMethod?: HttpMethod;
+  /** Lifecycle events to report. Repeatable: rendered as multiple form params. */
+  StatusCallbackEvent?: CallStatusCallbackEvent[];
 }
 
 export interface ListConferencesParams {
   FriendlyName?: string;
   Status?: ConferenceStatus;
   /** Twilio wire name: `DateCreated` (full UTC day). */
-  dateCreated?: string;
+  dateCreated?: string | Date;
   /** Twilio wire name: `DateCreated<`. */
-  dateCreatedLt?: string;
+  dateCreatedLt?: string | Date;
   /** Twilio wire name: `DateCreated>`. */
-  dateCreatedGt?: string;
+  dateCreatedGt?: string | Date;
   /** Twilio wire name: `DateUpdated` (full UTC day). */
-  dateUpdated?: string;
+  dateUpdated?: string | Date;
   /** Twilio wire name: `DateUpdated<`. */
-  dateUpdatedLt?: string;
+  dateUpdatedLt?: string | Date;
   /** Twilio wire name: `DateUpdated>`. */
-  dateUpdatedGt?: string;
+  dateUpdatedGt?: string | Date;
   Page?: number;
   PageSize?: number;
   PageToken?: string;

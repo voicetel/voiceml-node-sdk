@@ -1,14 +1,19 @@
+import { dateOnly } from '../encoding.js';
 import type {
+  GetRecordingParams,
+  ListRecordingsParams,
+  ListTranscriptionsParams,
   Recording,
   RecordingAudio,
   RecordingList,
-  GetRecordingParams,
-  ListRecordingsParams,
+  Transcription,
+  TranscriptionList,
 } from '../models/index.js';
+import { paginate } from '../pagination.js';
 import { BaseResource } from './base.js';
 
 export class RecordingsResource extends BaseResource {
-  list(params: ListRecordingsParams = {}): Promise<RecordingList> {
+  async list(params: ListRecordingsParams = {}): Promise<RecordingList> {
     return this.t.request<RecordingList>({
       method: 'GET',
       path: this.path('Recordings'),
@@ -16,42 +21,40 @@ export class RecordingsResource extends BaseResource {
     });
   }
 
+  /** Lazily walk every page of `/Recordings`, following `next_page_uri`. */
   async *iterate(params: ListRecordingsParams = {}): AsyncGenerator<Recording, void, void> {
-    let page = params.Page ?? 0;
-    while (true) {
-      const chunk = await this.list({ ...params, Page: page });
-      for (const item of chunk.recordings) yield item;
-      if (!chunk.next_page_uri || chunk.recordings.length === 0) return;
-      page += 1;
-    }
+    yield* paginate(this.t, await this.list(params));
   }
 
-  get(recordingSid: string, params: GetRecordingParams = {}): Promise<Recording> {
+  async get(recordingSid: string, params: GetRecordingParams = {}): Promise<Recording> {
     return this.t.request<Recording>({
       method: 'GET',
       path: this.path('Recordings', recordingSid),
-      params: getRecordingToQuery(params),
+      params: { IncludeSoftDeleted: params.IncludeSoftDeleted },
     });
   }
 
   /**
-   * Fetch the WAV audio for a recording. Three server delivery shapes are flattened by
-   * following any 302 redirect to S3:
-   *   - 200 OK: local file present.
-   *   - 302 Found: archived to S3; the transport follows the presigned URL.
-   *   - 410 Gone: local file gone AND no S3 key. Raises `GoneError`.
+   * Download the WAV audio for a recording (`GET …/Recordings/{Sid}.wav`, authenticated).
+   * The server answers in one of three ways:
+   *   - 200 OK: the local file, returned directly.
+   *   - 302 Found: archived to storage; the SDK follows the presigned `Location` **without**
+   *     the `Authorization` header (it is dropped whenever the host or scheme changes, and an
+   *     https→http downgrade is refused).
+   *   - 410 Gone: no local file and no archive — raises `GoneError`.
    *
-   * Audio is served at `…/Recordings/{Sid}.wav` — the canonical `.json` suffix used by
-   * the JSON REST surface is intentionally NOT appended here.
+   * Uses the client's `fetch`, `timeoutMs` (covering the full body) and retry policy.
    */
   async getAudio(recordingSid: string): Promise<RecordingAudio> {
-    const wavPath =
-      `/2010-04-01/Accounts/${this.t.accountSid}/Recordings/${recordingSid}.wav`;
-    const { body, headers } = await this.t.fetchBytes(wavPath);
+    const res = await this.t.fetchBytes({
+      path: this.pathWithSuffix('.wav', 'Recordings', recordingSid),
+      accept: 'audio/*, */*',
+    });
     return {
       sid: recordingSid,
-      body,
-      contentType: headers.get('content-type') ?? 'application/octet-stream',
+      body: res.body,
+      contentType: res.headers.get('content-type') ?? 'application/octet-stream',
+      redirected: res.redirected,
     };
   }
 
@@ -61,11 +64,70 @@ export class RecordingsResource extends BaseResource {
       path: this.path('Recordings', recordingSid),
     });
   }
+
+  // --- Transcriptions of a recording ---
+
+  async listTranscriptions(
+    recordingSid: string,
+    params: ListTranscriptionsParams = {},
+  ): Promise<TranscriptionList> {
+    return this.t.request<TranscriptionList>({
+      method: 'GET',
+      path: this.path('Recordings', recordingSid, 'Transcriptions'),
+      params: listTranscriptionsToQuery(params),
+    });
+  }
+
+  async getTranscription(recordingSid: string, transcriptionSid: string): Promise<Transcription> {
+    return this.t.request<Transcription>({
+      method: 'GET',
+      path: this.path('Recordings', recordingSid, 'Transcriptions', transcriptionSid),
+    });
+  }
+
+  async deleteTranscription(recordingSid: string, transcriptionSid: string): Promise<void> {
+    await this.t.request<void>({
+      method: 'DELETE',
+      path: this.path('Recordings', recordingSid, 'Transcriptions', transcriptionSid),
+    });
+  }
+}
+
+/** Account-wide `/Transcriptions` (recording transcriptions across every recording). */
+export class TranscriptionsResource extends BaseResource {
+  async list(params: ListTranscriptionsParams = {}): Promise<TranscriptionList> {
+    return this.t.request<TranscriptionList>({
+      method: 'GET',
+      path: this.path('Transcriptions'),
+      params: listTranscriptionsToQuery(params),
+    });
+  }
+
+  /** Lazily walk every page of `/Transcriptions`, following `next_page_uri`. */
+  async *iterate(
+    params: ListTranscriptionsParams = {},
+  ): AsyncGenerator<Transcription, void, void> {
+    yield* paginate(this.t, await this.list(params));
+  }
+
+  async get(transcriptionSid: string): Promise<Transcription> {
+    return this.t.request<Transcription>({
+      method: 'GET',
+      path: this.path('Transcriptions', transcriptionSid),
+    });
+  }
+
+  async delete(transcriptionSid: string): Promise<void> {
+    await this.t.request<void>({
+      method: 'DELETE',
+      path: this.path('Transcriptions', transcriptionSid),
+    });
+  }
 }
 
 function listRecordingsToQuery(p: ListRecordingsParams): Record<string, unknown> {
   return {
-    DateCreated: p.dateCreated,
+    DateCreated: dateOnly(p.dateCreated),
     'DateCreated<': p.dateCreatedLt,
     'DateCreated>': p.dateCreatedGt,
     CallSid: p.CallSid,
@@ -77,8 +139,13 @@ function listRecordingsToQuery(p: ListRecordingsParams): Record<string, unknown>
   };
 }
 
-function getRecordingToQuery(p: GetRecordingParams): Record<string, unknown> {
+function listTranscriptionsToQuery(p: ListTranscriptionsParams): Record<string, unknown> {
   return {
-    IncludeSoftDeleted: p.IncludeSoftDeleted,
+    DateCreated: dateOnly(p.dateCreated),
+    'DateCreated<': p.dateCreatedLt,
+    'DateCreated>': p.dateCreatedGt,
+    Page: p.Page,
+    PageSize: p.PageSize,
+    PageToken: p.PageToken,
   };
 }

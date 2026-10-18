@@ -1,32 +1,32 @@
-import type { PageEnvelope } from './common.js';
+import type { HttpMethod, Open, PageEnvelope } from './common.js';
 
 /**
- * SipDomain mirrors Twilio's `Domain` resource (the SIP ingress endpoint, `SD…`).
+ * A SIP Domain (`SD…`), the Twilio-compatible SIP ingress endpoint.
  * CredentialList and IpAccessControlList bindings are attached via the mapping
  * sub-resources; this struct carries only the domain's own configuration.
  */
 export interface SipDomain {
-  sid: string;
-  account_sid: string;
-  api_version: string;
-  domain_name: string;
-  friendly_name: string | null;
-  auth_type: string | null;
-  voice_url: string | null;
-  voice_method: string | null;
-  voice_fallback_url: string | null;
-  voice_fallback_method: string | null;
-  voice_status_callback_url: string | null;
-  voice_status_callback_method: string | null;
-  sip_registration: boolean | null;
-  emergency_calling_enabled: boolean | null;
-  secure: boolean | null;
-  byoc_trunk_sid: string | null;
-  emergency_caller_sid: string | null;
-  date_created: string;
-  date_updated: string;
-  uri: string;
-  subresource_uris?: Record<string, string>;
+  sid: string | null;
+  account_sid: string | null;
+  api_version: string | null;
+  domain_name: string | null;
+  friendly_name?: string | null;
+  auth_type?: string | null;
+  voice_url?: string | null;
+  voice_method?: string | null;
+  voice_fallback_url?: string | null;
+  voice_fallback_method?: string | null;
+  voice_status_callback_url?: string | null;
+  voice_status_callback_method?: string | null;
+  sip_registration?: boolean | null;
+  emergency_calling_enabled?: boolean | null;
+  secure?: boolean | null;
+  byoc_trunk_sid?: string | null;
+  emergency_caller_sid?: string | null;
+  date_created: string | null;
+  date_updated: string | null;
+  uri: string | null;
+  subresource_uris?: Record<string, string> | null;
 }
 
 export interface SipDomainList extends PageEnvelope {
@@ -35,13 +35,13 @@ export interface SipDomainList extends PageEnvelope {
 
 /** A named bag of SIP-digest credentials — Twilio-compatible `CL…`. */
 export interface SipCredentialList {
-  sid: string;
-  account_sid: string;
-  friendly_name: string | null;
-  date_created: string;
-  date_updated: string;
-  uri: string;
-  subresource_uris?: Record<string, string>;
+  sid: string | null;
+  account_sid: string | null;
+  friendly_name?: string | null;
+  date_created: string | null;
+  date_updated: string | null;
+  uri: string | null;
+  subresource_uris?: Record<string, string> | null;
 }
 
 export interface SipCredentialListList extends PageEnvelope {
@@ -53,19 +53,19 @@ export interface SipCredentialListList extends PageEnvelope {
  * never round-tripped on response — use `update` with a new password to rotate.
  */
 export interface SipCredential {
-  sid: string;
-  account_sid: string;
-  credential_list_sid: string;
-  username: string;
-  date_created: string;
-  date_updated: string;
-  uri: string;
+  sid: string | null;
+  account_sid: string | null;
+  credential_list_sid: string | null;
+  username: string | null;
+  date_created: string | null;
+  date_updated: string | null;
+  uri: string | null;
 }
 
 /**
  * List page for credentials within a CredentialList. Spec-named
  * `SipCredentialListPage` — note: it's a *page of credentials*, not of
- * credential-lists, mirroring Twilio's naming.
+ * credential-lists, following the Twilio-compatible naming.
  */
 export interface SipCredentialListPage extends PageEnvelope {
   credentials: SipCredential[];
@@ -73,13 +73,13 @@ export interface SipCredentialListPage extends PageEnvelope {
 
 /** A named bag of CIDR-bound IP addresses — Twilio-compatible `AL…`. */
 export interface SipIpAccessControlList {
-  sid: string;
-  account_sid: string;
-  friendly_name: string | null;
-  date_created: string;
-  date_updated: string;
-  uri: string;
-  subresource_uris?: Record<string, string>;
+  sid: string | null;
+  account_sid: string | null;
+  friendly_name?: string | null;
+  date_created: string | null;
+  date_updated: string | null;
+  uri: string | null;
+  subresource_uris?: Record<string, string> | null;
 }
 
 export interface SipIpAccessControlListList extends PageEnvelope {
@@ -88,15 +88,15 @@ export interface SipIpAccessControlListList extends PageEnvelope {
 
 /** A single CIDR-bound entry in an IpAccessControlList — `IP…`. */
 export interface SipIpAddress {
-  sid: string;
-  account_sid: string;
-  ip_access_control_list_sid: string;
-  friendly_name: string;
-  ip_address: string;
+  sid: string | null;
+  account_sid: string | null;
+  ip_access_control_list_sid: string | null;
+  friendly_name: string | null;
+  ip_address: string | null;
   cidr_prefix_length: number;
-  date_created: string;
-  date_updated: string;
-  uri: string;
+  date_created: string | null;
+  date_updated: string | null;
+  uri: string | null;
 }
 
 export interface SipIpAddressList extends PageEnvelope {
@@ -110,13 +110,13 @@ export interface SipIpAddressList extends PageEnvelope {
  * `domain_sid` records which domain the binding is attached to.
  */
 export interface SipDomainMapping {
-  sid: string;
-  account_sid: string;
-  friendly_name: string | null;
-  domain_sid: string | null;
-  date_created: string;
-  date_updated: string;
-  uri: string;
+  sid: string | null;
+  account_sid: string | null;
+  friendly_name?: string | null;
+  domain_sid?: string | null;
+  date_created: string | null;
+  date_updated: string | null;
+  uri: string | null;
 }
 
 export interface SipCredentialListMappingList extends PageEnvelope {
@@ -136,11 +136,11 @@ export interface CreateSipDomainRequest {
   DomainName: string;
   FriendlyName?: string;
   VoiceUrl?: string;
-  VoiceMethod?: string;
+  VoiceMethod?: HttpMethod;
   VoiceFallbackUrl?: string;
-  VoiceFallbackMethod?: string;
+  VoiceFallbackMethod?: HttpMethod;
   VoiceStatusCallbackUrl?: string;
-  VoiceStatusCallbackMethod?: string;
+  VoiceStatusCallbackMethod?: HttpMethod;
   SipRegistration?: boolean;
   Secure?: boolean;
   EmergencyCallingEnabled?: boolean;
@@ -152,11 +152,11 @@ export interface CreateSipDomainRequest {
 export interface UpdateSipDomainRequest {
   FriendlyName?: string;
   VoiceUrl?: string;
-  VoiceMethod?: string;
+  VoiceMethod?: HttpMethod;
   VoiceFallbackUrl?: string;
-  VoiceFallbackMethod?: string;
+  VoiceFallbackMethod?: HttpMethod;
   VoiceStatusCallbackUrl?: string;
-  VoiceStatusCallbackMethod?: string;
+  VoiceStatusCallbackMethod?: HttpMethod;
   SipRegistration?: boolean;
   Secure?: boolean;
   EmergencyCallingEnabled?: boolean;
@@ -221,11 +221,42 @@ export interface CreateSipIpAccessControlListMappingRequest {
   IpAccessControlListSid: string;
 }
 
+/** Paging params for SIP lists without filters (credentials, mappings, registrations). */
 export interface ListSipPageParams {
   Page?: number;
   PageSize?: number;
   PageToken?: string;
-  // Index signature so the interface satisfies the transport's
-  // `params: Record<string, unknown>` constraint without a cast.
-  [key: string]: unknown;
+}
+
+/** Paging + `FriendlyName` filter for the Domains, CredentialLists, IpAccessControlLists and IpAddresses lists. */
+export interface ListSipFilteredPageParams extends ListSipPageParams {
+  FriendlyName?: string;
+}
+
+/** One registered contact of a SIP registration. */
+export interface SipRegistrationContact {
+  contact: string;
+  received?: string | null;
+  socket?: string | null;
+  user_agent?: string | null;
+  expires_at?: string | null;
+  registered: boolean;
+}
+
+/** A SIP endpoint currently registered against one of the account's domains. */
+export interface SipRegistration {
+  aor: string;
+  username: string;
+  domain: string;
+  domain_sid: string;
+  status: Open<'registered' | 'expired'>;
+  caller_id?: string | null;
+  user_agent?: string | null;
+  last_registered?: string | null;
+  contacts: SipRegistrationContact[];
+  active_call?: Record<string, unknown> | null;
+}
+
+export interface SipRegistrationList extends PageEnvelope {
+  registrations: SipRegistration[];
 }

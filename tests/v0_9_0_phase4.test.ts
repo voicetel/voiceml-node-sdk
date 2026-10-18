@@ -185,7 +185,7 @@ describe('Phase 4 — ServiceConversationMessage + Receipts', () => {
     conversation_sid: CH_SID,
     sid: IM_SID,
     index: 0,
-    author: '+15551234567',
+    author: '+14155550103',
     body: 'hi',
     media: null,
     attributes: '{}',

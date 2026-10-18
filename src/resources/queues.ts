@@ -9,36 +9,32 @@ import type {
   QueueMemberList,
   UpdateQueueRequest,
 } from '../models/index.js';
+import { paginate } from '../pagination.js';
 import { BaseResource } from './base.js';
 
 export class QueuesResource extends BaseResource {
-  create(body: CreateQueueRequest): Promise<Queue> {
+  async create(body: CreateQueueRequest): Promise<Queue> {
     return this.t.request<Queue>({ method: 'POST', path: this.path('Queues'), form: body });
   }
 
-  list(params: ListPageParams = {}): Promise<QueueList> {
+  async list(params: ListPageParams = {}): Promise<QueueList> {
     return this.t.request<QueueList>({
       method: 'GET',
       path: this.path('Queues'),
-      params: { ...params },
+      params,
     });
   }
 
+  /** Lazily walk every page of `/Queues`, following `next_page_uri`. */
   async *iterate(params: ListPageParams = {}): AsyncGenerator<Queue, void, void> {
-    let page = params.Page ?? 0;
-    while (true) {
-      const chunk = await this.list({ ...params, Page: page });
-      for (const item of chunk.queues) yield item;
-      if (!chunk.next_page_uri || chunk.queues.length === 0) return;
-      page += 1;
-    }
+    yield* paginate(this.t, await this.list(params));
   }
 
-  get(queueSid: string): Promise<Queue> {
+  async get(queueSid: string): Promise<Queue> {
     return this.t.request<Queue>({ method: 'GET', path: this.path('Queues', queueSid) });
   }
 
-  update(queueSid: string, body: UpdateQueueRequest): Promise<Queue> {
+  async update(queueSid: string, body: UpdateQueueRequest): Promise<Queue> {
     return this.t.request<Queue>({
       method: 'POST',
       path: this.path('Queues', queueSid),
@@ -52,22 +48,25 @@ export class QueuesResource extends BaseResource {
 
   // --- Members ---
 
-  listMembers(queueSid: string, params: ListQueueMembersParams = {}): Promise<QueueMemberList> {
+  async listMembers(
+    queueSid: string,
+    params: ListQueueMembersParams = {},
+  ): Promise<QueueMemberList> {
     return this.t.request<QueueMemberList>({
       method: 'GET',
       path: this.path('Queues', queueSid, 'Members'),
-      params: { ...params },
+      params,
     });
   }
 
-  peekFront(queueSid: string): Promise<QueueMember> {
+  async peekFront(queueSid: string): Promise<QueueMember> {
     return this.t.request<QueueMember>({
       method: 'GET',
       path: this.path('Queues', queueSid, 'Members', 'Front'),
     });
   }
 
-  dequeueFront(queueSid: string, body: DequeueRequest): Promise<QueueMember> {
+  async dequeueFront(queueSid: string, body: DequeueRequest): Promise<QueueMember> {
     return this.t.request<QueueMember>({
       method: 'POST',
       path: this.path('Queues', queueSid, 'Members', 'Front'),
@@ -75,14 +74,14 @@ export class QueuesResource extends BaseResource {
     });
   }
 
-  getMember(queueSid: string, callSid: string): Promise<QueueMember> {
+  async getMember(queueSid: string, callSid: string): Promise<QueueMember> {
     return this.t.request<QueueMember>({
       method: 'GET',
       path: this.path('Queues', queueSid, 'Members', callSid),
     });
   }
 
-  dequeueMember(
+  async dequeueMember(
     queueSid: string,
     callSid: string,
     body: DequeueRequest,

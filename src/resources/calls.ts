@@ -1,19 +1,20 @@
+import { dateOnly } from '../encoding.js';
 import type {
   Call,
+  CallEventList,
   CallList,
   CallPayment,
   CallTranscription,
   CreateCallRequest,
   CreatePaymentParams,
-  EventsList,
   ListCallNotificationsParams,
+  ListCallRecordingsParams,
   ListCallsParams,
   ListPageParams,
-  NotificationsList,
+  Notification,
+  NotificationList,
   Recording,
   RecordingList,
-  ListCallRecordingsParams,
-  SiprecList,
   SiprecSession,
   StartRecordingRequest,
   StartSiprecRequest,
@@ -23,16 +24,15 @@ import type {
   StopStreamRequest,
   StopTranscriptionRequest,
   Stream,
-  StreamList,
-  TranscriptionList,
+  UpdateCallRecordingRequest,
   UpdateCallRequest,
   UpdatePaymentParams,
-  UpdateRecordingRequest,
 } from '../models/index.js';
+import { paginate } from '../pagination.js';
 import { BaseResource } from './base.js';
 
 export class CallsResource extends BaseResource {
-  list(params: ListCallsParams = {}): Promise<CallList> {
+  async list(params: ListCallsParams = {}): Promise<CallList> {
     return this.t.request<CallList>({
       method: 'GET',
       path: this.path('Calls'),
@@ -40,15 +40,15 @@ export class CallsResource extends BaseResource {
     });
   }
 
-  create(body: CreateCallRequest): Promise<Call> {
+  async create(body: CreateCallRequest): Promise<Call> {
     return this.t.request<Call>({ method: 'POST', path: this.path('Calls'), form: body });
   }
 
-  get(callSid: string): Promise<Call> {
+  async get(callSid: string): Promise<Call> {
     return this.t.request<Call>({ method: 'GET', path: this.path('Calls', callSid) });
   }
 
-  update(callSid: string, body: UpdateCallRequest): Promise<Call> {
+  async update(callSid: string, body: UpdateCallRequest): Promise<Call> {
     return this.t.request<Call>({
       method: 'POST',
       path: this.path('Calls', callSid),
@@ -62,7 +62,10 @@ export class CallsResource extends BaseResource {
 
   // --- Recordings (call-scoped) ---
 
-  listRecordings(callSid: string, params: ListCallRecordingsParams = {}): Promise<RecordingList> {
+  async listRecordings(
+    callSid: string,
+    params: ListCallRecordingsParams = {},
+  ): Promise<RecordingList> {
     return this.t.request<RecordingList>({
       method: 'GET',
       path: this.path('Calls', callSid, 'Recordings'),
@@ -70,7 +73,7 @@ export class CallsResource extends BaseResource {
     });
   }
 
-  startRecording(callSid: string, body: StartRecordingRequest = {}): Promise<Recording> {
+  async startRecording(callSid: string, body: StartRecordingRequest = {}): Promise<Recording> {
     return this.t.request<Recording>({
       method: 'POST',
       path: this.path('Calls', callSid, 'Recordings'),
@@ -78,17 +81,21 @@ export class CallsResource extends BaseResource {
     });
   }
 
-  getRecording(callSid: string, recordingSid: string): Promise<Recording> {
+  async getRecording(callSid: string, recordingSid: string): Promise<Recording> {
     return this.t.request<Recording>({
       method: 'GET',
       path: this.path('Calls', callSid, 'Recordings', recordingSid),
     });
   }
 
-  updateRecording(
+  /**
+   * Pause, resume or stop a call recording. `recordingSid` may be `Twilio.CURRENT` to target
+   * the call's active recording.
+   */
+  async updateRecording(
     callSid: string,
     recordingSid: string,
-    body: UpdateRecordingRequest,
+    body: UpdateCallRecordingRequest,
   ): Promise<Recording> {
     return this.t.request<Recording>({
       method: 'POST',
@@ -104,16 +111,9 @@ export class CallsResource extends BaseResource {
     });
   }
 
-  // --- Streams ---
+  // --- Media Streams (start / stop) ---
 
-  listStreams(callSid: string): Promise<StreamList> {
-    return this.t.request<StreamList>({
-      method: 'GET',
-      path: this.path('Calls', callSid, 'Streams'),
-    });
-  }
-
-  startStream(callSid: string, body: StartStreamRequest): Promise<Stream> {
+  async startStream(callSid: string, body: StartStreamRequest): Promise<Stream> {
     return this.t.request<Stream>({
       method: 'POST',
       path: this.path('Calls', callSid, 'Streams'),
@@ -121,14 +121,7 @@ export class CallsResource extends BaseResource {
     });
   }
 
-  getStream(callSid: string, streamSid: string): Promise<Stream> {
-    return this.t.request<Stream>({
-      method: 'GET',
-      path: this.path('Calls', callSid, 'Streams', streamSid),
-    });
-  }
-
-  stopStream(
+  async stopStream(
     callSid: string,
     streamSid: string,
     body: StopStreamRequest = { Status: 'stopped' },
@@ -140,16 +133,9 @@ export class CallsResource extends BaseResource {
     });
   }
 
-  // --- SIPREC ---
+  // --- SIPREC (start / stop) ---
 
-  listSiprec(callSid: string): Promise<SiprecList> {
-    return this.t.request<SiprecList>({
-      method: 'GET',
-      path: this.path('Calls', callSid, 'Siprec'),
-    });
-  }
-
-  startSiprec(callSid: string, body: StartSiprecRequest = {}): Promise<SiprecSession> {
+  async startSiprec(callSid: string, body: StartSiprecRequest = {}): Promise<SiprecSession> {
     return this.t.request<SiprecSession>({
       method: 'POST',
       path: this.path('Calls', callSid, 'Siprec'),
@@ -157,14 +143,7 @@ export class CallsResource extends BaseResource {
     });
   }
 
-  getSiprec(callSid: string, siprecSid: string): Promise<SiprecSession> {
-    return this.t.request<SiprecSession>({
-      method: 'GET',
-      path: this.path('Calls', callSid, 'Siprec', siprecSid),
-    });
-  }
-
-  stopSiprec(
+  async stopSiprec(
     callSid: string,
     siprecSid: string,
     body: StopSiprecRequest = { Status: 'stopped' },
@@ -176,16 +155,9 @@ export class CallsResource extends BaseResource {
     });
   }
 
-  // --- Transcriptions ---
+  // --- Real-time transcriptions (start / stop) ---
 
-  listTranscriptions(callSid: string): Promise<TranscriptionList> {
-    return this.t.request<TranscriptionList>({
-      method: 'GET',
-      path: this.path('Calls', callSid, 'Transcriptions'),
-    });
-  }
-
-  startTranscription(
+  async startTranscription(
     callSid: string,
     body: StartTranscriptionRequest = {},
   ): Promise<CallTranscription> {
@@ -196,14 +168,7 @@ export class CallsResource extends BaseResource {
     });
   }
 
-  getTranscription(callSid: string, transcriptionSid: string): Promise<CallTranscription> {
-    return this.t.request<CallTranscription>({
-      method: 'GET',
-      path: this.path('Calls', callSid, 'Transcriptions', transcriptionSid),
-    });
-  }
-
-  stopTranscription(
+  async stopTranscription(
     callSid: string,
     transcriptionSid: string,
     body: StopTranscriptionRequest = { Status: 'stopped' },
@@ -222,7 +187,7 @@ export class CallsResource extends BaseResource {
    * `CallPayment`. Returns 403 when the tenant is not `pay_enabled` or has no
    * `stripe_secret_key` configured.
    */
-  startPayment(callSid: string, params: CreatePaymentParams = {}): Promise<CallPayment> {
+  async startPayment(callSid: string, params: CreatePaymentParams = {}): Promise<CallPayment> {
     return this.t.request<CallPayment>({
       method: 'POST',
       path: this.path('Calls', callSid, 'Payments'),
@@ -235,7 +200,7 @@ export class CallsResource extends BaseResource {
    * fields; `Status=cancel` aborts the session. `Capture=...` tells the runtime which input
    * the user is about to type next.
    */
-  updatePayment(
+  async updatePayment(
     callSid: string,
     paymentSid: string,
     params: UpdatePaymentParams,
@@ -247,68 +212,59 @@ export class CallsResource extends BaseResource {
     });
   }
 
-  // --- Notifications / Events (compat stubs) ---
+  // --- Notifications / Events ---
 
-  listNotifications(
+  async listNotifications(
     callSid: string,
     params: ListCallNotificationsParams = {},
-  ): Promise<NotificationsList> {
-    return this.t.request<NotificationsList>({
+  ): Promise<NotificationList> {
+    return this.t.request<NotificationList>({
       method: 'GET',
       path: this.path('Calls', callSid, 'Notifications'),
       params: listNotificationsToQuery(params),
     });
   }
 
-  getNotification(
-    callSid: string,
-    notificationSid: string,
-  ): Promise<Record<string, unknown>> {
-    return this.t.request<Record<string, unknown>>({
+  async getNotification(callSid: string, notificationSid: string): Promise<Notification> {
+    return this.t.request<Notification>({
       method: 'GET',
       path: this.path('Calls', callSid, 'Notifications', notificationSid),
     });
   }
 
-  listEvents(callSid: string, params: ListPageParams = {}): Promise<EventsList> {
-    return this.t.request<EventsList>({
+  async listEvents(callSid: string, params: ListPageParams = {}): Promise<CallEventList> {
+    return this.t.request<CallEventList>({
       method: 'GET',
       path: this.path('Calls', callSid, 'Events'),
-      params: { ...params },
+      params,
     });
   }
 
   /**
-   * `POST /Calls/{sid}/UserDefinedMessages` — server returns 501 (`NotImplementedAPIError`).
-   * Mounted for API completeness so consumers get a clean exception rather than discovering
-   * the gap at runtime.
+   * `POST /Calls/{sid}/UserDefinedMessages` — the server answers 501
+   * (`NotImplementedAPIError`). Mounted so callers get a typed error rather than a missing
+   * method. The spec defines no body fields for this operation.
    */
-  async sendUserDefinedMessage(callSid: string, payload?: Record<string, unknown>): Promise<void> {
+  async sendUserDefinedMessage(callSid: string): Promise<void> {
     await this.t.request<void>({
       method: 'POST',
       path: this.path('Calls', callSid, 'UserDefinedMessages'),
-      form: payload ?? null,
     });
   }
 
   /**
-   * Walk every page of `/Calls` and yield individual `Call` records. Use for medium pulls;
-   * for very large result sets, page manually via `list()` + `next_page_uri`.
+   * Lazily walk every page of `/Calls`, following the server's `next_page_uri` (which carries
+   * the `PageToken`), and yield individual `Call` records. Breaking out of the loop stops
+   * further requests.
    */
   async *iterate(params: ListCallsParams = {}): AsyncGenerator<Call, void, void> {
-    let page = params.Page ?? 0;
-    while (true) {
-      const chunk = await this.list({ ...params, Page: page });
-      for (const call of chunk.calls) yield call;
-      if (!chunk.next_page_uri || chunk.calls.length === 0) return;
-      page += 1;
-    }
+    yield* paginate(this.t, await this.list(params));
   }
 }
 
-function listCallRecordingsToQuery(p: ListCallRecordingsParams): Record<string, unknown> {
+export function listCallRecordingsToQuery(p: ListCallRecordingsParams): Record<string, unknown> {
   return {
-    DateCreated: p.dateCreated,
+    DateCreated: dateOnly(p.dateCreated),
     'DateCreated<': p.dateCreatedLt,
     'DateCreated>': p.dateCreatedGt,
     Page: p.Page,
@@ -317,13 +273,13 @@ function listCallRecordingsToQuery(p: ListCallRecordingsParams): Record<string, 
   };
 }
 
-function listNotificationsToQuery(p: ListCallNotificationsParams): Record<string, unknown> {
+export function listNotificationsToQuery(p: ListCallNotificationsParams): Record<string, unknown> {
   return {
     Page: p.Page,
     PageSize: p.PageSize,
     PageToken: p.PageToken,
     Log: p.Log,
-    MessageDate: p.messageDate,
+    MessageDate: dateOnly(p.messageDate),
     'MessageDate<': p.messageDateLt,
     'MessageDate>': p.messageDateGt,
   };
@@ -335,15 +291,12 @@ function listCallsToQuery(p: ListCallsParams): Record<string, unknown> {
     From: p.From,
     Status: p.Status,
     ParentCallSid: p.ParentCallSid,
-    StartTime: p.startTime,
+    StartTime: dateOnly(p.startTime),
     'StartTime<': p.startTimeLt,
     'StartTime>': p.startTimeGt,
-    EndTime: p.endTime,
+    EndTime: dateOnly(p.endTime),
     'EndTime<': p.endTimeLt,
     'EndTime>': p.endTimeGt,
-    // Legacy inclusive bounds — still accepted by the server.
-    'StartTime>=': p.startTimeGte,
-    'StartTime<=': p.startTimeLte,
     Page: p.Page,
     PageSize: p.PageSize,
     PageToken: p.PageToken,

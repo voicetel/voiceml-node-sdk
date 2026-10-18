@@ -110,12 +110,12 @@ describe('calls.create', () => {
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
     const body: CreateCallRequest = {
-      To: '+18005551234',
-      From: '+18005550000',
+      To: '+14155550100',
+      From: '+14155550101',
       Url: 'https://example.com/twiml',
     };
     const call = await c.calls.create(body);
-    expect(call.sid.startsWith('CA')).toBe(true);
+    expect(call.sid).toMatch(/^CA/);
 
     expect(calls).toHaveLength(1);
     const [{ url, init }] = calls;
@@ -128,20 +128,20 @@ describe('calls.create', () => {
 
     const params = init.body as URLSearchParams;
     expect(params).toBeInstanceOf(URLSearchParams);
-    expect(params.get('To')).toBe('+18005551234');
-    expect(params.get('From')).toBe('+18005550000');
-    expect(params.get('Url')).toBe('https://example.com/twiml');
+    // Exact wire bytes: `+` must travel as %2B, never as a literal `+` (a space).
+    expect(params.toString()).toBe(
+      'To=%2B14155550100&From=%2B14155550101&Url=https%3A%2F%2Fexample.com%2Ftwiml',
+    );
   });
 });
 
 describe('calls.list', () => {
-  it('round-trips Twilio-compatible filter params including StartTime>= and StartTime<=', async () => {
+  it('sends only spec filter keys (no legacy StartTime>= / StartTime<=)', async () => {
     const { fetch, calls } = fakeFetch([
       jsonResponse({
         calls: [callPayload()],
         page: 0,
         page_size: 50,
-        total: 1,
         next_page_uri: null,
         uri: '/Calls',
       }),
@@ -150,17 +150,32 @@ describe('calls.list', () => {
 
     const result = await c.calls.list({
       Status: 'completed',
-      startTimeGte: '2026-01-01',
-      startTimeLte: '2026-12-31',
+      startTimeGt: '2026-01-01',
+      startTimeLt: '2026-12-31',
       PageSize: 10,
     });
     expect(result.calls).toHaveLength(1);
 
     const url = new URL(calls[0]!.url);
-    expect(url.searchParams.get('Status')).toBe('completed');
-    expect(url.searchParams.get('StartTime>=')).toBe('2026-01-01');
-    expect(url.searchParams.get('StartTime<=')).toBe('2026-12-31');
-    expect(url.searchParams.get('PageSize')).toBe('10');
+    expect(url.search).toBe('?Status=completed&StartTime%3C=2026-12-31&StartTime%3E=2026-01-01&PageSize=10');
+    expect(url.searchParams.has('StartTime>=')).toBe(false);
+    expect(url.searchParams.has('StartTime<=')).toBe(false);
+  });
+
+  it('serialises Date filters: equality as the UTC day, bounds as ISO-8601 UTC', async () => {
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ calls: [], page: 0, page_size: 50, next_page_uri: null }),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.calls.list({
+      startTime: new Date(Date.UTC(2026, 8, 30, 23, 59, 0)),
+      endTimeGt: new Date(Date.UTC(2026, 8, 30, 20, 0, 0)),
+    });
+
+    const url = new URL(calls[0]!.url);
+    expect(url.searchParams.get('StartTime')).toBe('2026-09-30');
+    expect(url.searchParams.get('EndTime>')).toBe('2026-09-30T20:00:00Z');
   });
 });
 
@@ -283,7 +298,7 @@ describe('error mapping', () => {
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
-    await expect(c.calls.sendUserDefinedMessage(sid, { hello: 'world' })).rejects.toBeInstanceOf(
+    await expect(c.calls.sendUserDefinedMessage(sid)).rejects.toBeInstanceOf(
       NotImplementedAPIError,
     );
   });
@@ -394,7 +409,14 @@ describe('recordings.getAudio', () => {
     const audio = await c.recordings.getAudio(reSid);
     expect(audio.sid).toBe(reSid);
     expect(audio.contentType).toBe('audio/wav');
+    expect(audio.redirected).toBe(false);
     expect(Array.from(audio.body)).toEqual([0x52, 0x49, 0x46, 0x46]);
+    // The audio endpoint is authenticated like the rest of the API.
+    const headers = calls[0]!.init.headers as Record<string, string>;
+    expect(headers.Authorization).toBe(
+      'Basic ' + Buffer.from(`${ACCOUNT_SID}:${API_KEY}`).toString('base64'),
+    );
+    expect(headers.Accept).toBe('audio/*, */*');
     // .wav must NOT have .json appended — and must not be double-suffixed
     expect(calls[0]!.url).toBe(
       `${BASE}/2010-04-01/Accounts/${ACCOUNT_SID}/Recordings/${reSid}.wav`,
@@ -414,7 +436,7 @@ describe('.json URL suffix', () => {
   it('appends .json to Calls list and Calls/{sid} get', async () => {
     const sid = 'CA' + '0'.repeat(32);
     const { fetch, calls } = fakeFetch([
-      emptyOk({ calls: [], page: 0, page_size: 50, total: 0 }),
+      emptyOk({ calls: [], page: 0, page_size: 50 }),
       emptyOk(callPayload(sid)),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
@@ -470,7 +492,7 @@ describe('.json URL suffix', () => {
 
 function incomingPhoneNumberPayload(
   sid: string = 'PN' + '0'.repeat(32),
-  phoneNumber = '+18005551234',
+  phoneNumber = '+14155550100',
 ) {
   return {
     sid,
@@ -496,8 +518,6 @@ describe('incomingPhoneNumbers', () => {
         incoming_phone_numbers: [incomingPhoneNumberPayload()],
         page: 0,
         page_size: 50,
-        total: 1,
-        num_pages: 1,
         start: 0,
         end: 0,
         first_page_uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers.json?PageSize=50&Page=0`,
@@ -508,10 +528,10 @@ describe('incomingPhoneNumbers', () => {
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
-    const result = await c.incomingPhoneNumbers.list({ PhoneNumber: '+18005551234' });
+    const result = await c.incomingPhoneNumbers.list({ PhoneNumber: '+14155550100' });
 
     expect(result.incoming_phone_numbers).toHaveLength(1);
-    expect(result.incoming_phone_numbers[0]!.sid.startsWith('PN')).toBe(true);
+    expect(result.incoming_phone_numbers[0]!.sid).toMatch(/^PN/);
     expect(result.page).toBe(0);
     expect(result.page_size).toBe(50);
     expect(result.next_page_uri).toBeNull();
@@ -519,7 +539,7 @@ describe('incomingPhoneNumbers', () => {
 
     const u = new URL(calls[0]!.url);
     expect(u.pathname).toBe(`/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers.json`);
-    expect(u.searchParams.get('PhoneNumber')).toBe('+18005551234');
+    expect(u.searchParams.get('PhoneNumber')).toBe('+14155550100');
   });
 
   it('create — POSTs form body and returns PN-prefixed sid', async () => {
@@ -527,21 +547,21 @@ describe('incomingPhoneNumbers', () => {
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
     const result = await c.incomingPhoneNumbers.create({
-      PhoneNumber: '+18005551234',
+      PhoneNumber: '+14155550100',
       VoiceUrl: 'https://example.com/voice',
       VoiceMethod: 'POST',
     });
-    expect(result.sid.startsWith('PN')).toBe(true);
-    expect(result.phone_number).toBe('+18005551234');
-    expect(result.capabilities.voice).toBe(true);
-    expect(result.capabilities.sms).toBe(false);
+    expect(result.sid).toMatch(/^PN/);
+    expect(result.phone_number).toBe('+14155550100');
+    expect(result.capabilities?.voice).toBe(true);
+    expect(result.capabilities?.sms).toBe(false);
 
     expect(calls[0]!.init.method).toBe('POST');
     expect(new URL(calls[0]!.url).pathname).toBe(
       `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers.json`,
     );
     const params = calls[0]!.init.body as URLSearchParams;
-    expect(params.get('PhoneNumber')).toBe('+18005551234');
+    expect(params.get('PhoneNumber')).toBe('+14155550100');
     expect(params.get('VoiceUrl')).toBe('https://example.com/voice');
     expect(params.get('VoiceMethod')).toBe('POST');
   });
@@ -837,7 +857,7 @@ describe('v0.6.3 — Recording.error_code + StartConferenceRecordingAPI', () => 
 describe('v0.6.3 — list filter params', () => {
   it('calls.list sends StartTime/EndTime triple operators', async () => {
     const { fetch, calls } = fakeFetch([
-      jsonResponse({ calls: [], page: 0, page_size: 50, total: 0, uri: '/Calls' }),
+      jsonResponse({ calls: [], page: 0, page_size: 50, uri: '/Calls' }),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
@@ -862,8 +882,8 @@ describe('v0.6.3 — list filter params', () => {
   it('conferences.list and listParticipants forward filter params', async () => {
     const cfSid = 'CF' + 'a'.repeat(32);
     const { fetch, calls } = fakeFetch([
-      jsonResponse({ conferences: [], page: 0, page_size: 50, total: 0, uri: '/x' }),
-      jsonResponse({ participants: [], page: 1, page_size: 25, total: 0, uri: '/x' }),
+      jsonResponse({ conferences: [], page: 0, page_size: 50, uri: '/x' }),
+      jsonResponse({ participants: [], page: 1, page_size: 25, uri: '/x' }),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
@@ -885,8 +905,8 @@ describe('v0.6.3 — list filter params', () => {
   it('recordings.list and calls.listRecordings send DateCreated filters', async () => {
     const callSid = 'CA' + 'b'.repeat(32);
     const { fetch, calls } = fakeFetch([
-      jsonResponse({ recordings: [], page: 0, page_size: 50, total: 0, uri: '/x' }),
-      jsonResponse({ recordings: [], page: 0, page_size: 10, total: 0, uri: '/x' }),
+      jsonResponse({ recordings: [], page: 0, page_size: 50, uri: '/x' }),
+      jsonResponse({ recordings: [], page: 0, page_size: 10, uri: '/x' }),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
@@ -912,7 +932,7 @@ describe('v0.6.3 — list filter params', () => {
 
   it('calls.list sends PageToken (spec v0.6.4)', async () => {
     const { fetch, calls } = fakeFetch([
-      jsonResponse({ calls: [], page: 0, page_size: 50, total: 0, uri: '/Calls' }),
+      jsonResponse({ calls: [], page: 0, page_size: 50, uri: '/Calls' }),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
@@ -974,8 +994,8 @@ describe('v0.6.6 — conferences.createParticipant', () => {
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
     await c.conferences.createParticipant(cfSid, {
-      From: '+18005550000',
-      To: '+18005551234',
+      From: '+14155550101',
+      To: '+14155550100',
     });
 
     expect(calls[0]!.init.method).toBe('POST');
@@ -983,15 +1003,15 @@ describe('v0.6.6 — conferences.createParticipant', () => {
       `/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences/${cfSid}/Participants.json`,
     );
     const params = calls[0]!.init.body as URLSearchParams;
-    expect(params.get('From')).toBe('+18005550000');
-    expect(params.get('To')).toBe('+18005551234');
+    expect(params.get('From')).toBe('+14155550101');
+    expect(params.get('To')).toBe('+14155550100');
   });
 });
 
 describe('v0.6.6 — conferences.list date filters', () => {
   it('sends DateCreated and DateUpdated triple operators', async () => {
     const { fetch, calls } = fakeFetch([
-      jsonResponse({ conferences: [], page: 0, page_size: 50, total: 0, uri: '/x' }),
+      jsonResponse({ conferences: [], page: 0, page_size: 50, uri: '/x' }),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
@@ -1018,7 +1038,7 @@ describe('v0.6.6 — calls.listNotifications + getNotification', () => {
   it('listNotifications sends Log and MessageDate filters', async () => {
     const callSid = 'CA' + 'f'.repeat(32);
     const { fetch, calls } = fakeFetch([
-      jsonResponse({ notifications: [], page: 0, page_size: 50, total: 0 }),
+      jsonResponse({ notifications: [], page: 0, page_size: 50 }),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
@@ -1059,7 +1079,7 @@ describe('v0.6.6 — calls.listNotifications + getNotification', () => {
 describe('v0.6.6 — notifications resource', () => {
   it('list sends Log and MessageDate filters to /Notifications', async () => {
     const { fetch, calls } = fakeFetch([
-      jsonResponse({ notifications: [], page: 0, page_size: 50, total: 0 }),
+      jsonResponse({ notifications: [], page: 0, page_size: 50 }),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
@@ -1091,7 +1111,7 @@ describe('v0.6.6 — notifications resource', () => {
 describe('v0.6.6 — recordings IncludeSoftDeleted', () => {
   it('list sends IncludeSoftDeleted=true', async () => {
     const { fetch, calls } = fakeFetch([
-      jsonResponse({ recordings: [], page: 0, page_size: 50, total: 0, uri: '/x' }),
+      jsonResponse({ recordings: [], page: 0, page_size: 50, uri: '/x' }),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
@@ -1166,13 +1186,13 @@ describe('v0.6.6 — conferences recording sub-resource', () => {
 describe('v0.6.6 — incomingPhoneNumbers typed endpoints', () => {
   it('listLocal/createLocal hit /IncomingPhoneNumbers/Local', async () => {
     const { fetch, calls } = fakeFetch([
-      jsonResponse({ incoming_phone_numbers: [], page: 0, page_size: 50, total: 0 }),
+      jsonResponse({ incoming_phone_numbers: [], page: 0, page_size: 50 }),
       jsonResponse(incomingPhoneNumberPayload(), 201),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
     await c.incomingPhoneNumbers.listLocal({ FriendlyName: 'support' });
-    await c.incomingPhoneNumbers.createLocal({ PhoneNumber: '+18005551234' });
+    await c.incomingPhoneNumbers.createLocal({ PhoneNumber: '+14155550100' });
 
     expect(new URL(calls[0]!.url).pathname).toBe(
       `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers/Local.json`,
@@ -1186,13 +1206,13 @@ describe('v0.6.6 — incomingPhoneNumbers typed endpoints', () => {
 
   it('listMobile/createMobile hit /IncomingPhoneNumbers/Mobile', async () => {
     const { fetch, calls } = fakeFetch([
-      jsonResponse({ incoming_phone_numbers: [], page: 0, page_size: 50, total: 0 }),
+      jsonResponse({ incoming_phone_numbers: [], page: 0, page_size: 50 }),
       jsonResponse(incomingPhoneNumberPayload(), 201),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
     await c.incomingPhoneNumbers.listMobile();
-    await c.incomingPhoneNumbers.createMobile({ PhoneNumber: '+18005551234' });
+    await c.incomingPhoneNumbers.createMobile({ PhoneNumber: '+14155550100' });
 
     expect(new URL(calls[0]!.url).pathname).toBe(
       `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers/Mobile.json`,
@@ -1204,13 +1224,13 @@ describe('v0.6.6 — incomingPhoneNumbers typed endpoints', () => {
 
   it('listTollFree/createTollFree hit /IncomingPhoneNumbers/TollFree', async () => {
     const { fetch, calls } = fakeFetch([
-      jsonResponse({ incoming_phone_numbers: [], page: 0, page_size: 50, total: 0 }),
+      jsonResponse({ incoming_phone_numbers: [], page: 0, page_size: 50 }),
       jsonResponse(incomingPhoneNumberPayload(), 201),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
     await c.incomingPhoneNumbers.listTollFree();
-    await c.incomingPhoneNumbers.createTollFree({ PhoneNumber: '+18005551234' });
+    await c.incomingPhoneNumbers.createTollFree({ PhoneNumber: '+14155550100' });
 
     expect(new URL(calls[0]!.url).pathname).toBe(
       `/2010-04-01/Accounts/${ACCOUNT_SID}/IncomingPhoneNumbers/TollFree.json`,
@@ -1262,12 +1282,12 @@ function queuePayload(sid: string = 'QU' + '0'.repeat(32)): object {
 
 describe('calls.iterate — pagination', () => {
   it('yields items across two pages then stops', async () => {
-    const { fetch } = fakeFetch([
+    const { fetch , calls } = fakeFetch([
       jsonResponse({
         calls: [callPayload('CA' + '1'.repeat(32)), callPayload('CA' + '2'.repeat(32))],
         page: 0,
         page_size: 2,
-        next_page_uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls.json?Page=1&PageSize=2`,
+        next_page_uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls.json?PageSize=2&Page=1&PageToken=PACalls1`,
         uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls.json?Page=0&PageSize=2`,
       }),
       jsonResponse({
@@ -1287,12 +1307,17 @@ describe('calls.iterate — pagination', () => {
     expect(items[0]!.sid).toBe('CA' + '1'.repeat(32));
     expect(items[1]!.sid).toBe('CA' + '2'.repeat(32));
     expect(items[2]!.sid).toBe('CA' + '3'.repeat(32));
+    expect(calls).toHaveLength(2);
+    // The second request follows next_page_uri verbatim (PageToken included).
+    expect(calls[1]!.url).toBe(
+      `${BASE}/2010-04-01/Accounts/${ACCOUNT_SID}/Calls.json?PageSize=2&Page=1&PageToken=PACalls1`,
+    );
   });
 });
 
 describe('conferences.iterate — pagination', () => {
   it('yields items across two pages then stops', async () => {
-    const { fetch } = fakeFetch([
+    const { fetch , calls } = fakeFetch([
       jsonResponse({
         conferences: [
           conferencePayload('CF' + '1'.repeat(32)),
@@ -1300,7 +1325,7 @@ describe('conferences.iterate — pagination', () => {
         ],
         page: 0,
         page_size: 2,
-        next_page_uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences.json?Page=1&PageSize=2`,
+        next_page_uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences.json?PageSize=2&Page=1&PageToken=PAConferences1`,
         uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences.json?Page=0&PageSize=2`,
       }),
       jsonResponse({
@@ -1320,12 +1345,17 @@ describe('conferences.iterate — pagination', () => {
     expect(items[0]!.sid).toBe('CF' + '1'.repeat(32));
     expect(items[1]!.sid).toBe('CF' + '2'.repeat(32));
     expect(items[2]!.sid).toBe('CF' + '3'.repeat(32));
+    expect(calls).toHaveLength(2);
+    // The second request follows next_page_uri verbatim (PageToken included).
+    expect(calls[1]!.url).toBe(
+      `${BASE}/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences.json?PageSize=2&Page=1&PageToken=PAConferences1`,
+    );
   });
 });
 
 describe('recordings.iterate — pagination', () => {
   it('yields items across two pages then stops', async () => {
-    const { fetch } = fakeFetch([
+    const { fetch , calls } = fakeFetch([
       jsonResponse({
         recordings: [
           recordingPayload('RE' + '1'.repeat(32)),
@@ -1333,7 +1363,7 @@ describe('recordings.iterate — pagination', () => {
         ],
         page: 0,
         page_size: 2,
-        next_page_uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Recordings.json?Page=1&PageSize=2`,
+        next_page_uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Recordings.json?PageSize=2&Page=1&PageToken=PARecordings1`,
         uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Recordings.json?Page=0&PageSize=2`,
       }),
       jsonResponse({
@@ -1353,17 +1383,22 @@ describe('recordings.iterate — pagination', () => {
     expect(items[0]!.sid).toBe('RE' + '1'.repeat(32));
     expect(items[1]!.sid).toBe('RE' + '2'.repeat(32));
     expect(items[2]!.sid).toBe('RE' + '3'.repeat(32));
+    expect(calls).toHaveLength(2);
+    // The second request follows next_page_uri verbatim (PageToken included).
+    expect(calls[1]!.url).toBe(
+      `${BASE}/2010-04-01/Accounts/${ACCOUNT_SID}/Recordings.json?PageSize=2&Page=1&PageToken=PARecordings1`,
+    );
   });
 });
 
 describe('queues.iterate — pagination', () => {
   it('yields items across two pages then stops', async () => {
-    const { fetch } = fakeFetch([
+    const { fetch , calls } = fakeFetch([
       jsonResponse({
         queues: [queuePayload('QU' + '1'.repeat(32)), queuePayload('QU' + '2'.repeat(32))],
         page: 0,
         page_size: 2,
-        next_page_uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Queues.json?Page=1&PageSize=2`,
+        next_page_uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Queues.json?PageSize=2&Page=1&PageToken=PAQueues1`,
         uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Queues.json?Page=0&PageSize=2`,
       }),
       jsonResponse({
@@ -1383,6 +1418,11 @@ describe('queues.iterate — pagination', () => {
     expect(items[0]!.sid).toBe('QU' + '1'.repeat(32));
     expect(items[1]!.sid).toBe('QU' + '2'.repeat(32));
     expect(items[2]!.sid).toBe('QU' + '3'.repeat(32));
+    expect(calls).toHaveLength(2);
+    // The second request follows next_page_uri verbatim (PageToken included).
+    expect(calls[1]!.url).toBe(
+      `${BASE}/2010-04-01/Accounts/${ACCOUNT_SID}/Queues.json?PageSize=2&Page=1&PageToken=PAQueues1`,
+    );
   });
 });
 
@@ -1434,8 +1474,8 @@ function messagePayload(sid: string = 'SM' + '0'.repeat(32)) {
     sid,
     account_sid: ACCOUNT_SID,
     api_version: '2010-04-01',
-    to: '+18005551234',
-    from: '+18005550000',
+    to: '+14155550100',
+    from: '+14155550101',
     body: 'hello',
     status: 'sent',
     num_segments: '1',
@@ -1459,9 +1499,9 @@ describe('v0.7.0 — messages.create', () => {
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
     const msg = await c.messages.create({
-      To: '+18005551234',
+      To: '+14155550100',
       Body: 'hello',
-      From: '+18005550000',
+      From: '+14155550101',
     });
     expect(msg.sid.startsWith('SM')).toBe(true);
     expect(msg.num_segments).toBe('1');
@@ -1476,9 +1516,9 @@ describe('v0.7.0 — messages.create', () => {
 
     const params = init.body as URLSearchParams;
     expect(params).toBeInstanceOf(URLSearchParams);
-    expect(params.get('To')).toBe('+18005551234');
+    expect(params.get('To')).toBe('+14155550100');
     expect(params.get('Body')).toBe('hello');
-    expect(params.get('From')).toBe('+18005550000');
+    expect(params.get('From')).toBe('+14155550101');
   });
 });
 
@@ -1513,7 +1553,6 @@ describe('v0.7.0 — messages.list', () => {
         messages: [messagePayload()],
         page: 0,
         page_size: 50,
-        total: 1,
         next_page_uri: null,
         uri: '/Messages',
       }),

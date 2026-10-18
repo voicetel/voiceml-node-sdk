@@ -1,3 +1,4 @@
+import { encodePathSegment, route } from '../encoding.js';
 import type {
   AssistantsV1Assistant,
   AssistantsV1AssistantList,
@@ -22,6 +23,7 @@ import type {
   CreateAssistantsV1SendMessageRequest,
   CreateAssistantsV1ToolRequest,
   ListAssistantsV1KnowledgeParams,
+  ListAssistantsV1AssistantsParams,
   ListAssistantsV1PageParams,
   ListAssistantsV1PolicyParams,
   ListAssistantsV1ToolParams,
@@ -32,7 +34,7 @@ import type {
 import type { Transport } from '../transport.js';
 
 /**
- * `client.assistantsV1.*` — Twilio Assistants v1 surface (Phase 5).
+ * `client.assistantsV1.*` — Twilio-compatible Assistants v1 API.
  *
  * Like the other `/v1/` namespaces this sits **outside** the
  * `/2010-04-01/Accounts/{Sid}/…` prefix; the account is resolved from HTTP
@@ -70,11 +72,11 @@ export class AssistantsV1AssistantToolsResource {
   }
 
   private root(tail?: string): string {
-    const base = `/v1/Assistants/${this.assistantId}/Tools`;
-    return tail ? `${base}/${tail}` : base;
+    const base = route`/v1/Assistants/${this.assistantId}/Tools`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(params: ListAssistantsV1PageParams = {}): Promise<AssistantsV1ToolList> {
+  async list(params: ListAssistantsV1PageParams = {}): Promise<AssistantsV1ToolList> {
     return this.t.request<AssistantsV1ToolList>({
       method: 'GET',
       path: this.root(),
@@ -108,11 +110,11 @@ export class AssistantsV1AssistantKnowledgeResource {
   }
 
   private root(tail?: string): string {
-    const base = `/v1/Assistants/${this.assistantId}/Knowledge`;
-    return tail ? `${base}/${tail}` : base;
+    const base = route`/v1/Assistants/${this.assistantId}/Knowledge`;
+    return tail === undefined ? base : `${base}/${encodePathSegment(tail)}`;
   }
 
-  list(params: ListAssistantsV1PageParams = {}): Promise<AssistantsV1KnowledgeList> {
+  async list(params: ListAssistantsV1PageParams = {}): Promise<AssistantsV1KnowledgeList> {
     return this.t.request<AssistantsV1KnowledgeList>({
       method: 'GET',
       path: this.root(),
@@ -146,10 +148,10 @@ export class AssistantsV1AssistantFeedbacksResource {
   }
 
   private root(): string {
-    return `/v1/Assistants/${this.assistantId}/Feedbacks`;
+    return route`/v1/Assistants/${this.assistantId}/Feedbacks`;
   }
 
-  list(params: ListAssistantsV1PageParams = {}): Promise<AssistantsV1FeedbackList> {
+  async list(params: ListAssistantsV1PageParams = {}): Promise<AssistantsV1FeedbackList> {
     return this.t.request<AssistantsV1FeedbackList>({
       method: 'GET',
       path: this.root(),
@@ -157,7 +159,7 @@ export class AssistantsV1AssistantFeedbacksResource {
     });
   }
 
-  create(body: CreateAssistantsV1FeedbackRequest): Promise<AssistantsV1Feedback> {
+  async create(body: CreateAssistantsV1FeedbackRequest): Promise<AssistantsV1Feedback> {
     return this.t.request<AssistantsV1Feedback>({
       method: 'POST',
       path: this.root(),
@@ -176,12 +178,12 @@ export class AssistantsV1AssistantMessagesResource {
     this.assistantId = assistantId;
   }
 
-  create(
+  async create(
     body: CreateAssistantsV1SendMessageRequest,
   ): Promise<AssistantsV1SendMessageResponse> {
     return this.t.request<AssistantsV1SendMessageResponse>({
       method: 'POST',
-      path: `/v1/Assistants/${this.assistantId}/Messages`,
+      path: route`/v1/Assistants/${this.assistantId}/Messages`,
       json: body,
     });
   }
@@ -212,7 +214,7 @@ export class AssistantsV1AssistantScope {
 export type AssistantsV1AssistantsCallable = ((
   assistantId: string,
 ) => AssistantsV1AssistantScope) & {
-  list(params?: ListAssistantsV1PageParams): Promise<AssistantsV1AssistantList>;
+  list(params?: ListAssistantsV1AssistantsParams): Promise<AssistantsV1AssistantList>;
   create(body: CreateAssistantsV1AssistantRequest): Promise<AssistantsV1Assistant>;
   fetch(assistantId: string): Promise<AssistantsV1AssistantWithToolsAndKnowledge>;
   update(
@@ -229,37 +231,37 @@ function makeAssistantsCallable(transport: Transport): AssistantsV1AssistantsCal
       assistantId,
     )) as AssistantsV1AssistantsCallable;
 
-  fn.list = (params: ListAssistantsV1PageParams = {}) =>
+  fn.list = async (params: ListAssistantsV1AssistantsParams = {}) =>
     transport.request<AssistantsV1AssistantList>({
       method: 'GET',
       path: '/v1/Assistants',
       params,
     });
 
-  fn.create = (body: CreateAssistantsV1AssistantRequest) =>
+  fn.create = async (body: CreateAssistantsV1AssistantRequest) =>
     transport.request<AssistantsV1Assistant>({
       method: 'POST',
       path: '/v1/Assistants',
       json: body,
     });
 
-  fn.fetch = (assistantId: string) =>
+  fn.fetch = async (assistantId: string) =>
     transport.request<AssistantsV1AssistantWithToolsAndKnowledge>({
       method: 'GET',
-      path: `/v1/Assistants/${assistantId}`,
+      path: route`/v1/Assistants/${assistantId}`,
     });
 
-  fn.update = (assistantId: string, body: UpdateAssistantsV1AssistantRequest) =>
+  fn.update = async (assistantId: string, body: UpdateAssistantsV1AssistantRequest) =>
     transport.request<AssistantsV1Assistant>({
       method: 'PUT',
-      path: `/v1/Assistants/${assistantId}`,
+      path: route`/v1/Assistants/${assistantId}`,
       json: body,
     });
 
   fn.delete = async (assistantId: string) => {
     await transport.request<void>({
       method: 'DELETE',
-      path: `/v1/Assistants/${assistantId}`,
+      path: route`/v1/Assistants/${assistantId}`,
     });
   };
 
@@ -277,7 +279,7 @@ export class AssistantsV1ToolsResource {
     this.t = transport;
   }
 
-  list(params: ListAssistantsV1ToolParams = {}): Promise<AssistantsV1ToolList> {
+  async list(params: ListAssistantsV1ToolParams = {}): Promise<AssistantsV1ToolList> {
     return this.t.request<AssistantsV1ToolList>({
       method: 'GET',
       path: '/v1/Tools',
@@ -285,7 +287,7 @@ export class AssistantsV1ToolsResource {
     });
   }
 
-  create(body: CreateAssistantsV1ToolRequest): Promise<AssistantsV1Tool> {
+  async create(body: CreateAssistantsV1ToolRequest): Promise<AssistantsV1Tool> {
     return this.t.request<AssistantsV1Tool>({
       method: 'POST',
       path: '/v1/Tools',
@@ -293,20 +295,20 @@ export class AssistantsV1ToolsResource {
     });
   }
 
-  fetch(id: string): Promise<AssistantsV1ToolWithPolicies> {
+  async fetch(id: string): Promise<AssistantsV1ToolWithPolicies> {
     return this.t.request<AssistantsV1ToolWithPolicies>({
       method: 'GET',
-      path: `/v1/Tools/${id}`,
+      path: route`/v1/Tools/${id}`,
     });
   }
 
-  update(
+  async update(
     id: string,
     body: UpdateAssistantsV1ToolRequest,
   ): Promise<AssistantsV1Tool> {
     return this.t.request<AssistantsV1Tool>({
       method: 'PUT',
-      path: `/v1/Tools/${id}`,
+      path: route`/v1/Tools/${id}`,
       json: body,
     });
   }
@@ -314,7 +316,7 @@ export class AssistantsV1ToolsResource {
   async delete(id: string): Promise<void> {
     await this.t.request<void>({
       method: 'DELETE',
-      path: `/v1/Tools/${id}`,
+      path: route`/v1/Tools/${id}`,
     });
   }
 }
@@ -333,10 +335,10 @@ export class AssistantsV1KnowledgeStatusResource {
     this.knowledgeId = knowledgeId;
   }
 
-  fetch(): Promise<AssistantsV1KnowledgeStatus> {
+  async fetch(): Promise<AssistantsV1KnowledgeStatus> {
     return this.t.request<AssistantsV1KnowledgeStatus>({
       method: 'GET',
-      path: `/v1/Knowledge/${this.knowledgeId}/Status`,
+      path: route`/v1/Knowledge/${this.knowledgeId}/Status`,
     });
   }
 }
@@ -351,12 +353,12 @@ export class AssistantsV1KnowledgeChunksResource {
     this.knowledgeId = knowledgeId;
   }
 
-  list(
+  async list(
     params: ListAssistantsV1PageParams = {},
   ): Promise<AssistantsV1KnowledgeChunkList> {
     return this.t.request<AssistantsV1KnowledgeChunkList>({
       method: 'GET',
-      path: `/v1/Knowledge/${this.knowledgeId}/Chunks`,
+      path: route`/v1/Knowledge/${this.knowledgeId}/Chunks`,
       params,
     });
   }
@@ -402,37 +404,37 @@ function makeKnowledgeCallable(transport: Transport): AssistantsV1KnowledgeCalla
       knowledgeId,
     )) as AssistantsV1KnowledgeCallable;
 
-  fn.list = (params: ListAssistantsV1KnowledgeParams = {}) =>
+  fn.list = async (params: ListAssistantsV1KnowledgeParams = {}) =>
     transport.request<AssistantsV1KnowledgeList>({
       method: 'GET',
       path: '/v1/Knowledge',
       params,
     });
 
-  fn.create = (body: CreateAssistantsV1KnowledgeRequest) =>
+  fn.create = async (body: CreateAssistantsV1KnowledgeRequest) =>
     transport.request<AssistantsV1Knowledge>({
       method: 'POST',
       path: '/v1/Knowledge',
       json: body,
     });
 
-  fn.fetch = (id: string) =>
+  fn.fetch = async (id: string) =>
     transport.request<AssistantsV1Knowledge>({
       method: 'GET',
-      path: `/v1/Knowledge/${id}`,
+      path: route`/v1/Knowledge/${id}`,
     });
 
-  fn.update = (id: string, body: UpdateAssistantsV1KnowledgeRequest) =>
+  fn.update = async (id: string, body: UpdateAssistantsV1KnowledgeRequest) =>
     transport.request<AssistantsV1Knowledge>({
       method: 'PUT',
-      path: `/v1/Knowledge/${id}`,
+      path: route`/v1/Knowledge/${id}`,
       json: body,
     });
 
   fn.delete = async (id: string) => {
     await transport.request<void>({
       method: 'DELETE',
-      path: `/v1/Knowledge/${id}`,
+      path: route`/v1/Knowledge/${id}`,
     });
   };
 
@@ -453,10 +455,10 @@ export class AssistantsV1SessionMessagesResource {
     this.sessionId = sessionId;
   }
 
-  list(params: ListAssistantsV1PageParams = {}): Promise<AssistantsV1MessageList> {
+  async list(params: ListAssistantsV1PageParams = {}): Promise<AssistantsV1MessageList> {
     return this.t.request<AssistantsV1MessageList>({
       method: 'GET',
-      path: `/v1/Sessions/${this.sessionId}/Messages`,
+      path: route`/v1/Sessions/${this.sessionId}/Messages`,
       params,
     });
   }
@@ -494,17 +496,17 @@ function makeSessionsCallable(transport: Transport): AssistantsV1SessionsCallabl
       sessionId,
     )) as AssistantsV1SessionsCallable;
 
-  fn.list = (params: ListAssistantsV1PageParams = {}) =>
+  fn.list = async (params: ListAssistantsV1PageParams = {}) =>
     transport.request<AssistantsV1SessionList>({
       method: 'GET',
       path: '/v1/Sessions',
       params,
     });
 
-  fn.fetch = (sessionId: string) =>
+  fn.fetch = async (sessionId: string) =>
     transport.request<AssistantsV1Session>({
       method: 'GET',
-      path: `/v1/Sessions/${sessionId}`,
+      path: route`/v1/Sessions/${sessionId}`,
     });
 
   return fn;
@@ -521,7 +523,7 @@ export class AssistantsV1PoliciesResource {
     this.t = transport;
   }
 
-  list(params: ListAssistantsV1PolicyParams = {}): Promise<AssistantsV1PolicyList> {
+  async list(params: ListAssistantsV1PolicyParams = {}): Promise<AssistantsV1PolicyList> {
     return this.t.request<AssistantsV1PolicyList>({
       method: 'GET',
       path: '/v1/Policies',

@@ -1,4 +1,20 @@
+import { encodePathSegment } from '../encoding.js';
+import { ConfigurationError } from '../errors.js';
 import type { Transport } from '../transport.js';
+
+/** Suffix of a `/2010-04-01` route, taken from the route definition (not the segment text). */
+export type RouteSuffix = '.json' | '.wav' | '';
+
+/** Build `/2010-04-01/Accounts/{AccountSid}/<segments><suffix>`, percent-encoding every segment. */
+export function accountPath(transport: Transport, segments: string[], suffix: RouteSuffix): string {
+  if (!transport.hasCredentials) {
+    throw new ConfigurationError(
+      'this client has no credentials — pass accountSid and apiKey to call account endpoints',
+    );
+  }
+  const tail = segments.map(encodePathSegment).join('/');
+  return `/2010-04-01/Accounts/${encodePathSegment(transport.accountSid)}/${tail}${suffix}`;
+}
 
 /** Mixin shared by every resource group — holds the transport + builds AccountSid-scoped paths. */
 export class BaseResource {
@@ -9,24 +25,16 @@ export class BaseResource {
   }
 
   /**
-   * Build a URL under `/2010-04-01/Accounts/{AccountSid}/…` and append the canonical
-   * Twilio `.json` suffix to the final path segment. Skips falsy segments.
-   *
-   * The suffix is omitted when the final segment already carries a recognized media
-   * extension (`.wav`/`.json`/`.yaml`/`.yml`) — callers that need a different shape
-   * (e.g. `recordings.getAudio()` for `.wav` audio) build the URL themselves.
-   *
-   * Caller passes sids and slug names verbatim — Twilio sids never need URL escaping.
+   * `/2010-04-01/Accounts/{AccountSid}/<segments>.json`. Every JSON route under the 2010 API ends in
+   * `.json`, so the suffix is always appended — a sid such as `Twilio.CURRENT` keeps it.
+   * Every segment is percent-encoded (RFC 3986 unreserved characters pass through).
    */
-  protected path(...parts: string[]): string {
-    const tail = parts.filter(Boolean).join('/');
-    const base = `/2010-04-01/Accounts/${this.t.accountSid}/${tail}`;
-    return hasMediaSuffix(base) ? base : `${base}.json`;
+  protected path(...segments: string[]): string {
+    return accountPath(this.t, segments, '.json');
   }
-}
 
-const MEDIA_SUFFIXES = ['.json', '.wav', '.yaml', '.yml'];
-
-function hasMediaSuffix(url: string): boolean {
-  return MEDIA_SUFFIXES.some((ext) => url.endsWith(ext));
+  /** Account-scoped route with an explicit suffix (`.wav` audio, suffix-less exports). */
+  protected pathWithSuffix(suffix: RouteSuffix, ...segments: string[]): string {
+    return accountPath(this.t, segments, suffix);
+  }
 }

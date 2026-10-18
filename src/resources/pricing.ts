@@ -1,3 +1,4 @@
+import { encodePathSegment, route } from '../encoding.js';
 import type {
   ListPricingPageParams,
   PricingCountriesList,
@@ -13,7 +14,7 @@ import type {
 import type { Transport } from '../transport.js';
 
 /**
- * `client.pricing.*` — Twilio `pricing.twilio.com` REST surface.
+ * `client.pricing.*` — Twilio-compatible Pricing v1 / v2 API.
  *
  * Read-only. Served on the default host (VoiceML has no pricing subdomain).
  * Layout:
@@ -55,7 +56,7 @@ export class PricingCountriesResource<T> {
     this.base = basePath;
   }
 
-  list(params: ListPricingPageParams = {}): Promise<PricingCountriesList> {
+  async list(params: ListPricingPageParams = {}): Promise<PricingCountriesList> {
     return this.t.request<PricingCountriesList>({
       method: 'GET',
       path: this.base,
@@ -63,10 +64,10 @@ export class PricingCountriesResource<T> {
     });
   }
 
-  fetch(isoCountry: string): Promise<T> {
+  async fetch(isoCountry: string): Promise<T> {
     return this.t.request<T>({
       method: 'GET',
-      path: `${this.base}/${isoCountry}`,
+      path: `${this.base}/${encodePathSegment(isoCountry)}`,
     });
   }
 }
@@ -82,10 +83,10 @@ export class PricingV1VoiceNumbersResource {
     this.t = transport;
   }
 
-  fetch(number: string): Promise<PricingVoiceNumber> {
+  async fetch(number: string): Promise<PricingVoiceNumber> {
     return this.t.request<PricingVoiceNumber>({
       method: 'GET',
-      path: `/v1/Voice/Numbers/${encodeURIComponent(number)}`,
+      path: route`/v1/Voice/Numbers/${number}`,
     });
   }
 }
@@ -142,13 +143,13 @@ export class PricingV2VoiceNumbersResource {
     this.t = transport;
   }
 
-  fetch(
+  async fetch(
     destinationNumber: string,
     opts: { originationNumber?: string } = {},
   ): Promise<PricingVoiceNumberV2> {
     return this.t.request<PricingVoiceNumberV2>({
       method: 'GET',
-      path: `/v2/Voice/Numbers/${encodeURIComponent(destinationNumber)}`,
+      path: route`/v2/Voice/Numbers/${destinationNumber}`,
       params: { OriginationNumber: opts.originationNumber },
     });
   }
@@ -161,13 +162,13 @@ export class PricingV2TrunkingNumbersResource {
     this.t = transport;
   }
 
-  fetch(
+  async fetch(
     destinationNumber: string,
     opts: { originationNumber?: string } = {},
   ): Promise<PricingTrunkingNumber> {
     return this.t.request<PricingTrunkingNumber>({
       method: 'GET',
-      path: `/v2/Trunking/Numbers/${encodeURIComponent(destinationNumber)}`,
+      path: route`/v2/Trunking/Numbers/${destinationNumber}`,
       params: { OriginationNumber: opts.originationNumber },
     });
   }

@@ -1,21 +1,19 @@
-import type { PageEnvelope, TrackSelector } from './common.js';
+import type { Open, TrackSelector } from './common.js';
 
 export type StreamStatus = 'in-progress' | 'stopped';
 
 export interface Stream {
-  sid: string;
-  account_sid: string;
-  call_sid: string;
-  name?: string;
-  status: StreamStatus;
+  sid: string | null;
+  account_sid: string | null;
+  call_sid: string | null;
+  name?: string | null;
+  status: Open<StreamStatus>;
+  /** @deprecated Not part of the current API response; the server no longer emits it. */
   api_version?: string;
-  uri: string;
+  uri: string | null;
+  /** @deprecated Not part of the current API response; the server no longer emits it. */
   date_created?: string;
-  date_updated?: string;
-}
-
-export interface StreamList extends PageEnvelope {
-  streams: Stream[];
+  date_updated?: string | null;
 }
 
 export interface StartStreamRequest {

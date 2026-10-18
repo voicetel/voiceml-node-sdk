@@ -1,6 +1,6 @@
-// Twilio response-shape conformance tests (#330, mirrors #256 Phase B).
+// Twilio response-shape conformance tests.
 //
-// SKIPPED unless VOICEML_CONFORMANCE_FIXTURES points at a fixture corpus
+// SKIPPED (with a visible reason) unless VOICEML_CONFORMANCE_FIXTURES points at a fixture corpus
 // emitted by callBroadcast's cmd/twilio-conformance-fixtures. The harness
 // loads each canonical Twilio response example from the corpus, structurally
 // validates it against the matching TS resource shape, and asserts the
@@ -9,10 +9,9 @@
 // from Twilio's documented shape — fix the SDK, not the fixture.
 //
 // TypeScript interfaces don't exist at runtime, so this harness checks
-// structurally: required fields present + correct primitive types + enum
-// values within the SDK's declared union. The Go SDK passes 132/132 via
-// json.Unmarshal type-strictness; the Python SDK uses Pydantic; this
-// harness's hand-rolled checks give us equivalent enforcement here.
+// structurally: required fields present with the right primitive types.
+// The always-on counterpart is tests/contract/models.test.ts, which checks
+// every exported response interface against the vendored public spec.
 //
 // Run:
 //
@@ -51,21 +50,10 @@ function loadEntries(): { root: string; entries: ConformanceEntry[] } | null {
 type FieldType = 'string' | 'number' | 'boolean' | 'object';
 interface ResourceShape {
   required: Array<{ field: string; type: FieldType }>;
-  // Enum-typed fields whose value must lie within the SDK's union.
-  enums?: Array<{ field: string; allowed: readonly string[] }>;
 }
 
-const CALL_STATUS = [
-  'queued', 'ringing', 'in-progress', 'completed', 'busy',
-  'no-answer', 'canceled', 'failed',
-] as const;
-const CALL_DIRECTION = ['inbound', 'outbound-api', 'outbound-dial'] as const;
-const ANSWERED_BY = [
-  'human', 'machine_start', 'machine_end_beep', 'machine_end_silence',
-  'machine_end_other', 'fax', 'unknown', '',
-] as const;
-const CONFERENCE_STATUS = ['init', 'in-progress', 'completed'] as const;
-
+// Response enums are open in the SDK (unknown server values must still decode), so the
+// harness checks field presence and primitive types only.
 const SHAPES: Record<string, ResourceShape> = {
   Call: {
     required: [
@@ -77,11 +65,6 @@ const SHAPES: Record<string, ResourceShape> = {
       { field: 'date_created', type: 'string' },
       { field: 'date_updated', type: 'string' },
       { field: 'uri', type: 'string' },
-    ],
-    enums: [
-      { field: 'status', allowed: CALL_STATUS },
-      { field: 'direction', allowed: CALL_DIRECTION },
-      { field: 'answered_by', allowed: ANSWERED_BY },
     ],
   },
   Conference: {
@@ -95,7 +78,6 @@ const SHAPES: Record<string, ResourceShape> = {
       { field: 'api_version', type: 'string' },
       { field: 'uri', type: 'string' },
     ],
-    enums: [{ field: 'status', allowed: CONFERENCE_STATUS }],
   },
   Participant: {
     required: [
@@ -258,31 +240,27 @@ function validateShape(body: unknown, shape: ResourceShape, where: string): void
       expect(typeof v, `${where}: '${field}' has wrong type (got ${typeof v}, want ${type})`).toBe(type);
     }
   }
-  if (shape.enums) {
-    for (const { field, allowed } of shape.enums) {
-      const v = obj[field];
-      if (typeof v === 'string') {
-        expect(allowed, `${where}: '${field}' = ${JSON.stringify(v)} not in SDK enum union`).toContain(v);
-      }
-    }
-  }
 }
 
 const loaded = loadEntries();
 
-describe.skipIf(!loaded)('Twilio response-shape conformance', () => {
-  if (!loaded) return;
+if (!loaded) {
+  describe('Twilio response-shape conformance', () => {
+    test.skip(`skipped: set ${FIXTURES_ENV} to a fixture corpus directory containing index.json`, () => {});
+  });
+} else {
   const { root, entries } = loaded;
+  // Only operations with an SDK model are checked; nothing passes as a placeholder.
+  const modelled = entries.filter((e) => pickShape(e.operation_id) !== null);
 
-  test.each(entries)(
-    '$resource/$operation_id/$example_name',
-    (entry) => {
+  describe('Twilio response-shape conformance', () => {
+    test('the corpus contains modelled operations', () => {
+      expect(modelled.length).toBeGreaterThan(0);
+    });
+
+    test.each(modelled)('$resource/$operation_id/$example_name', (entry) => {
       const picked = pickShape(entry.operation_id);
-      if (!picked) {
-        // Mirrors the Go harness's nil target — these operations have no
-        // SDK model (compat stubs, Messages gap, UserDefinedMessage).
-        return;
-      }
+      if (!picked) throw new Error(`no SDK model for ${entry.operation_id}`);
       const body = readFileSync(join(root, entry.file), 'utf-8');
       let parsed: unknown;
       try {
@@ -294,6 +272,6 @@ describe.skipIf(!loaded)('Twilio response-shape conformance', () => {
         );
       }
       validateShape(parsed, picked.shape, `${entry.operation_id}/${entry.example_name}`);
-    },
-  );
-});
+    });
+  });
+}

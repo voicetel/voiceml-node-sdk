@@ -24,7 +24,7 @@ const CONV_HOST = 'https://conversations.voicetel.com';
 
 // SID fixtures
 const QQ_SID = 'QQ' + '0'.repeat(32);
-const PHONE = '+18005551234';
+const PHONE = '+14155550100';
 const IL_SID = 'IL' + '1'.repeat(32);
 const IB_SID = 'IB' + '2'.repeat(32);
 const BY_SID = 'BY' + '3'.repeat(32);
@@ -427,7 +427,7 @@ describe('Conversations V1 — Conversations', () => {
       conversation_sid: CH_SID,
       sid: IM_SID,
       index: 0,
-      author: '+15551234567',
+      author: '+14155550103',
       body: 'hi',
       media: null,
       attributes: '{}',
@@ -748,7 +748,7 @@ describe('Conversations V1 — Configuration', () => {
     sid: IG_SID,
     account_sid: ACCOUNT_SID,
     type: 'sms',
-    address: '+15551234567',
+    address: '+14155550103',
     friendly_name: 'in',
     auto_creation: null,
     date_created: '2026-06-27T10:00:00Z',
@@ -790,11 +790,11 @@ describe('Conversations V1 — Configuration', () => {
     expect(calls[4].url).toBe(`${CONV_HOST}/v1/Configuration/Addresses`);
     await c.conversationsV1.configuration.addresses.create({
       Type: 'sms',
-      Address: '+15551234567',
+      Address: '+14155550103',
     });
     const body2 = calls[5].init.body as URLSearchParams;
     expect(body2.get('Type')).toBe('sms');
-    expect(body2.get('Address')).toBe('+15551234567');
+    expect(body2.get('Address')).toBe('+14155550103');
     await c.conversationsV1.configuration.addresses.fetch(IG_SID);
     expect(calls[6].url).toBe(`${CONV_HOST}/v1/Configuration/Addresses/${IG_SID}`);
     await c.conversationsV1.configuration.addresses.update(IG_SID, {

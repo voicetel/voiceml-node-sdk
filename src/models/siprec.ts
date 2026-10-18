@@ -1,22 +1,21 @@
-import type { PageEnvelope, TrackSelector } from './common.js';
+import type { Open, TrackSelector } from './common.js';
 
 export type SiprecStatus = 'in-progress' | 'stopped';
 
 export interface SiprecSession {
-  sid: string;
-  account_sid: string;
-  call_sid: string;
-  name?: string;
+  sid: string | null;
+  account_sid: string | null;
+  call_sid: string | null;
+  name?: string | null;
+  /** @deprecated Not part of the current API response; the server no longer emits it. */
   connector_name?: string;
-  status: SiprecStatus;
+  status: Open<SiprecStatus>;
+  /** @deprecated Not part of the current API response; the server no longer emits it. */
   api_version?: string;
-  uri: string;
+  uri: string | null;
+  /** @deprecated Not part of the current API response; the server no longer emits it. */
   date_created?: string;
-  date_updated?: string;
-}
-
-export interface SiprecList extends PageEnvelope {
-  siprec: SiprecSession[];
+  date_updated?: string | null;
 }
 
 export interface StartSiprecRequest {

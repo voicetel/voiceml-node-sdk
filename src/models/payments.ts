@@ -1,3 +1,5 @@
+import type { JsonObject } from '../encoding.js';
+
 /**
  * `<Pay>` REST companion resource. Twilio's response shape is intentionally minimal —
  * runtime config (ChargeAmount, PaymentConnector, ValidCardTypes, etc.) is captured
@@ -39,11 +41,7 @@ export type PaymentCapture =
   | 'security-code'
   | 'postal-code'
   | 'bank-routing-number'
-  | 'bank-account-number'
-  | 'payment-card-number-matcher'
-  | 'expiration-date-matcher'
-  | 'security-code-matcher'
-  | 'postal-code-matcher';
+  | 'bank-account-number';
 
 /** Narrows the `Status` field on Pay-session updates. */
 export type PaymentSessionStatus = 'complete' | 'cancel';
@@ -64,8 +62,8 @@ export interface CreatePaymentParams {
   Description?: string;
   Input?: PaymentInput;
   MinPostalCodeLength?: number;
-  /** Single-level JSON object passed to the payment connector. */
-  Parameter?: string;
+  /** Single-level JSON object passed to the payment connector (an object is sent as compact JSON). */
+  Parameter?: string | JsonObject;
   PaymentConnector?: string;
   PaymentMethod?: PaymentMethod;
   PostalCode?: boolean;

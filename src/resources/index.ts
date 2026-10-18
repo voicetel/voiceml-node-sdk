@@ -1,3 +1,11 @@
+export {
+  AccountsResource,
+  BalanceResource,
+  ExportsResource,
+  OutgoingCallerIdsResource,
+  UsageRecordsResource,
+} from './accounts.js';
+export type { UsageRecordWindow } from './accounts.js';
 export { ApplicationsResource } from './applications.js';
 export {
   AssistantsV1Resource,
@@ -64,7 +72,9 @@ export { MessagesResource } from './messages.js';
 export {
   MessagingV1Resource,
   MessagingV1ServicesResource,
+  MessagingV1ServicePhoneNumbersResource,
 } from './messaging_v1.js';
+export { MonitorAlertsResource } from './monitor.js';
 export { NotificationsResource } from './notifications.js';
 export {
   PricingResource,
@@ -81,7 +91,7 @@ export {
   PricingV2TrunkingNumbersResource,
 } from './pricing.js';
 export { QueuesResource } from './queues.js';
-export { RecordingsResource } from './recordings.js';
+export { RecordingsResource, TranscriptionsResource } from './recordings.js';
 export {
   RoutesV2Resource,
   RoutesV2SipDomainsResource,
@@ -99,6 +109,7 @@ export {
   SipDomainAuthResource,
   SipDomainAuthCallsResource,
   SipDomainAuthRegistrationsResource,
+  SipRegistrationsResource,
 } from './sip.js';
 export {
   VoiceV1Resource,

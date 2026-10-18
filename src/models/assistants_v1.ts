@@ -1,7 +1,7 @@
 /**
- * VoiceML Assistants v1 (assistants.twilio.com/v1) resource models.
+ * VoiceML Assistants v1 resource models (Twilio-compatible).
  *
- * Twilio-parity AI-Assistants surface (Phase 5). Unlike the form-encoded
+ * Twilio-compatible AI Assistants surface. Unlike the form-encoded
  * `/2010-04-01/Accounts/.../` and `/v1/Conversations` surfaces, the Assistants
  * v1 family uses **snake_case JSON** request bodies and `PUT` (not `POST`) for
  * updates. Query parameters on list ops are PascalCase per Twilio convention.
@@ -314,32 +314,32 @@ export interface AssistantsV1PolicyList {
 // ===========================================================================
 
 /**
- * Standard page params shared by `/v1/Assistants`, `/v1/Sessions`,
- * `/v1/Sessions/{id}/Messages`, `/v1/Assistants/{id}/Tools`,
- * `/v1/Assistants/{id}/Knowledge`, `/v1/Knowledge/{id}/Chunks`, and
- * `/v1/Assistants/{id}/Feedbacks`.
+ * Page params shared by `/v1/Sessions`, `/v1/Sessions/{id}/Messages`,
+ * `/v1/Assistants/{id}/Tools`, `/v1/Assistants/{id}/Knowledge`,
+ * `/v1/Knowledge/{id}/Chunks` and `/v1/Assistants/{id}/Feedbacks` (the spec declares only
+ * `PageSize` for these).
  */
 export interface ListAssistantsV1PageParams {
   PageSize?: number;
+}
+
+/** Page params for `GET /v1/Assistants`. */
+export interface ListAssistantsV1AssistantsParams {
+  PageSize?: number;
   Page?: number;
   PageToken?: string;
-  // Index signature so the interface satisfies the transport's
-  // `params: Record<string, unknown>` constraint without a cast.
-  [key: string]: unknown;
 }
 
 /** Filterable list params for `/v1/Tools` (optional `AssistantId`). */
 export interface ListAssistantsV1ToolParams {
   AssistantId?: string;
   PageSize?: number;
-  [key: string]: unknown;
 }
 
 /** Filterable list params for `/v1/Knowledge` (optional `AssistantId`). */
 export interface ListAssistantsV1KnowledgeParams {
   AssistantId?: string;
   PageSize?: number;
-  [key: string]: unknown;
 }
 
 /** Filterable list params for `/v1/Policies` (optional `ToolId`/`KnowledgeId`). */
@@ -347,5 +347,4 @@ export interface ListAssistantsV1PolicyParams {
   ToolId?: string;
   KnowledgeId?: string;
   PageSize?: number;
-  [key: string]: unknown;
 }

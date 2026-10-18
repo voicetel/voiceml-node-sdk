@@ -1,5 +1,5 @@
 /**
- * Pricing v1/v2 resource models — Twilio `pricing.twilio.com` REST surface.
+ * Twilio-compatible Pricing v1 / v2 resource models.
  *
  * VoiceML has no dedicated pricing subdomain, so these live on the default host
  * (`voiceml.voicetel.com`) under `/v1` and `/v2`. All operations are read-only
@@ -162,7 +162,4 @@ export interface PricingTrunkingNumber {
 /** Query params for pricing `Countries` list endpoints. */
 export interface ListPricingPageParams {
   PageSize?: number;
-  // Index signature so the interface satisfies the transport's
-  // `params: Record<string, unknown>` constraint without a cast.
-  [key: string]: unknown;
 }

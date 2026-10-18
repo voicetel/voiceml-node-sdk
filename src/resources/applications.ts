@@ -5,10 +5,11 @@ import type {
   ListApplicationsParams,
   UpdateApplicationRequest,
 } from '../models/index.js';
+import { paginate } from '../pagination.js';
 import { BaseResource } from './base.js';
 
 export class ApplicationsResource extends BaseResource {
-  create(body: CreateApplicationRequest): Promise<Application> {
+  async create(body: CreateApplicationRequest): Promise<Application> {
     return this.t.request<Application>({
       method: 'POST',
       path: this.path('Applications'),
@@ -16,22 +17,27 @@ export class ApplicationsResource extends BaseResource {
     });
   }
 
-  list(params: ListApplicationsParams = {}): Promise<ApplicationList> {
+  async list(params: ListApplicationsParams = {}): Promise<ApplicationList> {
     return this.t.request<ApplicationList>({
       method: 'GET',
       path: this.path('Applications'),
-      params: { ...params },
+      params,
     });
   }
 
-  get(applicationSid: string): Promise<Application> {
+  /** Lazily walk every page of `/Applications`, following `next_page_uri`. */
+  async *iterate(params: ListApplicationsParams = {}): AsyncGenerator<Application, void, void> {
+    yield* paginate(this.t, await this.list(params));
+  }
+
+  async get(applicationSid: string): Promise<Application> {
     return this.t.request<Application>({
       method: 'GET',
       path: this.path('Applications', applicationSid),
     });
   }
 
-  update(applicationSid: string, body: UpdateApplicationRequest): Promise<Application> {
+  async update(applicationSid: string, body: UpdateApplicationRequest): Promise<Application> {
     return this.t.request<Application>({
       method: 'POST',
       path: this.path('Applications', applicationSid),

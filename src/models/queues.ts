@@ -1,15 +1,15 @@
 import type { HttpMethod, PageEnvelope } from './common.js';
 
 export interface Queue {
-  sid: string;
-  account_sid: string;
-  friendly_name: string;
+  sid: string | null;
+  account_sid: string | null;
+  friendly_name: string | null;
   current_size: number;
   max_size: number;
   average_wait_time: number;
-  date_created: string;
-  date_updated: string;
-  uri: string;
+  date_created: string | null;
+  date_updated: string | null;
+  uri: string | null;
 }
 
 export interface QueueList extends PageEnvelope {
@@ -17,17 +17,26 @@ export interface QueueList extends PageEnvelope {
 }
 
 export interface QueueMember {
-  call_sid: string;
-  queue_sid: string;
-  account_sid: string;
-  date_enqueued: string;
+  call_sid: string | null;
+  queue_sid: string | null;
+  /** @deprecated Not part of the current API response; the server no longer emits it. */
+  account_sid?: string;
+  date_enqueued: string | null;
   wait_time: number;
   position: number;
-  uri: string;
+  uri: string | null;
 }
 
 export interface QueueMemberList extends PageEnvelope {
   queue_members: QueueMember[];
+  page: number;
+  page_size: number;
+  start?: number;
+  end?: number;
+  first_page_uri?: string;
+  next_page_uri?: string | null;
+  previous_page_uri?: string | null;
+  uri: string;
 }
 
 /** Body for `POST /Queues`. Idempotent on `FriendlyName`. `MaxSize` 0 = unlimited (Twilio default). */

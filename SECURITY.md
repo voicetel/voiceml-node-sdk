@@ -4,8 +4,8 @@
 
 | Version | Supported |
 | ------- | --------- |
-| 0.7.x   | ✅        |
-| < 0.7   | ❌        |
+| 0.9.x   | ✅        |
+| < 0.9   | ❌        |
 
 ## Reporting a Vulnerability
 
@@ -27,20 +27,35 @@ allow reasonable time for a fix before any public disclosure.
 ## Scope Notes
 
 This SDK constructs authenticated HTTP requests to the VoiceML REST
-API. Hardening expectations on the consumer side:
+API. What the SDK does, and what remains the consumer's responsibility:
 
-- Do not log `apiKey` / `authToken` or the `Authorization` header —
-  both carry the per-tenant secret in HTTP Basic form.
-- Keep `accountSid` + secret out of source control; load from a
-  secret manager or environment.
-- The SDK uses the runtime's global `fetch` and its TLS posture (TLS
-  1.2+ in Node 18+ / modern browsers). If you supply a custom
-  `fetch` implementation, you are responsible for matching that
-  posture.
-- Retries on 429 / 5xx replay the same request body. Do not pass
-  non-idempotent payloads through clients with retries enabled
-  unless the server enforces an idempotency key.
+- **Credentials.** The AccountSid + API key pair is sent as HTTP Basic
+  auth. The SDK keeps the encoded header in a private field: logging,
+  `util.inspect`-ing or `JSON.stringify`-ing a `Client`, its resources or
+  its transport prints `[redacted]` instead of the key. Do not log the
+  `apiKey` / `authToken` values or an `Authorization` header yourself,
+  and keep them out of source control (load them from a secret manager or
+  the environment).
+- **Retries never duplicate side effects.** `GET`, `PUT` and `DELETE`
+  retry on 429 / 500 / 502 / 503 / 504 and on network errors. `POST` and
+  `PATCH` (placing calls, sending messages, …) retry only on 429 and on
+  connection failures where the request provably never left the client
+  (DNS failure, connection refused, connect timeout, TLS handshake
+  failure) — never after a 5xx, a read timeout or a dropped connection.
+  `Retry-After` is honoured up to 60 s; a longer value raises immediately.
+- **Redirects.** Binary downloads (recording audio, exports) follow the
+  redirect to storage manually: the `Authorization` header is dropped as
+  soon as the scheme, host or port changes, and `https` → `http`
+  downgrades are refused. Pagination links are only followed on the
+  configured product host.
+- **Webhooks.** Use `validateRequest` / `RequestValidator` to verify the
+  `X-Twilio-Signature` header on every webhook before acting on it; the
+  comparison is constant-time.
+- **Transport security.** The SDK uses the runtime's `fetch` and its TLS
+  posture (TLS 1.2+ on Node 20+). If you supply a custom `fetch`, you are
+  responsible for matching that posture and for supporting
+  `redirect: 'manual'`.
 
-Out of scope: vulnerabilities in the published `voiceml` npm package
-caused by a forked / vendored copy that has been modified, or
-runtime-injected globals (`fetch` shims, transitive polyfills).
+Out of scope: vulnerabilities in the published `@voicetel.com/voiceml`
+npm package caused by a forked / vendored copy that has been modified,
+or runtime-injected globals (`fetch` shims, transitive polyfills).

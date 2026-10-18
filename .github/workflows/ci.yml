@@ -5,15 +5,62 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_call:
+
+permissions:
+  contents: read
 
 jobs:
-  test:
+  lint:
+    name: Lint + typecheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
+          cache: npm
       - run: npm ci
+      - run: npm run lint
       - run: npm run typecheck
+
+  test:
+    name: Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # `engines.node` is >=20; test the floor through the current release line.
+        node-version: ['20', '22', '24']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - run: npm ci
       - run: npm test
+
+  package:
+    name: Package smoke (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['20', '24']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # Pack, install the tarball into CJS / ESM / TS-node16 consumers, require + import + type-check.
+      - run: npm run smoke
+      # publint --strict + are-the-types-wrong over the packed tarball.
+      - run: npm run check:package
+      - name: Test fixtures stay out of the tarball
+        run: |
+          npm pack --dry-run --json > pack.json
+          node -e "const [p]=require('./pack.json'); const bad=p.files.map(f=>f.path).filter(f=>!/^(dist\/|README\.md$|CHANGELOG\.md$|LICENSE$|package\.json$)/.test(f)); if (bad.length) { console.error('unexpected files:', bad); process.exit(1); }"

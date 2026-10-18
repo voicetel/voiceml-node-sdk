@@ -2,8 +2,11 @@ import type { HealthStatus } from '../models/index.js';
 import type { Transport } from '../transport.js';
 
 /**
- * Diagnostic surfaces — `/health` and the OpenAPI doc endpoints. These sit at server root
- * (not under `/2010-04-01/Accounts/{AccountSid}/`) and are intentionally unauthenticated.
+ * Diagnostic surfaces — `/health` and the OpenAPI documents. These sit at the server root
+ * (not under `/2010-04-01/Accounts/{AccountSid}/`) and are unauthenticated: the SDK sends no
+ * credentials, so they also work on a client constructed without any (`new Client()`).
+ * They go through the normal transport, so the client's `fetch`, timeout, retries and
+ * User-Agent apply.
  */
 export class DiagnosticsResource {
   private readonly t: Transport;
@@ -12,25 +15,35 @@ export class DiagnosticsResource {
     this.t = transport;
   }
 
-  /** Deep liveness probe. 200 = hard checks pass; 503 raises a `ServerError`. */
+  /**
+   * Deep liveness probe. `200` returns the status (with any soft-check `warnings`); a `503`
+   * (a hard check failed) raises `ServerError` with the failing checks on `error.body`.
+   */
   async health(): Promise<HealthStatus> {
-    const url = `${this.t.baseUrl}/health`;
-    const response = await fetch(url, { headers: { Accept: 'application/json' } });
-    if (!response.ok) {
-      // Reuse the transport's parser by issuing through fetchBytes path? Simpler: throw.
-      const text = await response.text();
-      throw new Error(`/health returned ${response.status}: ${text.slice(0, 200)}`);
-    }
-    return (await response.json()) as HealthStatus;
+    return this.t.request<HealthStatus>({ method: 'GET', path: '/health', auth: false });
   }
 
-  /** Fetch the OpenAPI spec as parsed JSON. */
+  /** The OpenAPI document, parsed from `/openapi.json`. */
   async openapiJson(): Promise<unknown> {
-    const url = `${this.t.baseUrl}/openapi.json`;
-    const response = await fetch(url, { headers: { Accept: 'application/json' } });
-    if (!response.ok) {
-      throw new Error(`/openapi.json returned ${response.status}`);
-    }
-    return response.json();
+    return this.t.request<unknown>({ method: 'GET', path: '/openapi.json', auth: false });
+  }
+
+  /** The OpenAPI document as YAML text, from `/openapi.yaml`. */
+  async openapiYaml(): Promise<string> {
+    return this.#text('/openapi.yaml');
+  }
+
+  /** The OpenAPI document as YAML text, from `/openapi.yml`. */
+  async openapiYml(): Promise<string> {
+    return this.#text('/openapi.yml');
+  }
+
+  async #text(path: string): Promise<string> {
+    const res = await this.t.fetchBytes({
+      path,
+      auth: false,
+      accept: 'application/yaml, text/yaml, */*',
+    });
+    return new TextDecoder().decode(res.body);
   }
 }

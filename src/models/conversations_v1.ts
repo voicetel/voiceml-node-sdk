@@ -1,11 +1,13 @@
 /**
- * Twilio Conversations v1 (conversations.twilio.com/v1) resource models.
+ * Twilio-compatible Conversations v1 resource models.
  *
  * Same `/v1/` conventions as Voice v1: HTTP Basic auth resolves the account,
  * dates are ISO-8601, and list responses carry the {@link VoiceV1Meta} envelope
  * (re-exported here to keep call sites readable).
  */
 
+import type { JsonObject } from '../encoding.js';
+import type { Open } from './common.js';
 import type { VoiceV1Meta } from './voice_v1.js';
 
 // ---------------------------------------------------------------------------
@@ -16,20 +18,20 @@ export type ConversationState = 'initializing' | 'inactive' | 'active' | 'closed
 
 /** A stateful messaging thread (`CH…`). */
 export interface ConversationsV1Conversation {
-  account_sid: string;
-  chat_service_sid: string | null;
-  messaging_service_sid: string | null;
-  sid: string;
-  friendly_name: string | null;
-  unique_name: string | null;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  messaging_service_sid?: string | null;
+  sid: string | null;
+  friendly_name?: string | null;
+  unique_name?: string | null;
   attributes: string | null;
-  state: ConversationState;
+  state: Open<ConversationState>;
   date_created: string | null;
   date_updated: string | null;
-  timers: Record<string, unknown> | null;
+  timers?: Record<string, unknown> | null;
   url: string | null;
-  links: Record<string, string> | null;
-  bindings: Record<string, unknown> | null;
+  links?: Record<string, string> | null;
+  bindings?: Record<string, unknown> | null;
 }
 
 export interface ConversationsV1ConversationList {
@@ -41,7 +43,8 @@ export interface CreateConversationsV1ConversationRequest {
   FriendlyName?: string;
   UniqueName?: string;
   MessagingServiceSid?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   State?: ConversationState;
   'Timers.Inactive'?: string;
   'Timers.Closed'?: string;
@@ -53,7 +56,8 @@ export interface UpdateConversationsV1ConversationRequest {
   FriendlyName?: string;
   UniqueName?: string;
   MessagingServiceSid?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   State?: ConversationState;
   'Timers.Inactive'?: string;
   'Timers.Closed'?: string;
@@ -65,21 +69,21 @@ export interface UpdateConversationsV1ConversationRequest {
 
 /** A message inside a conversation (`IM…`). */
 export interface ConversationsV1ConversationMessage {
-  account_sid: string;
-  conversation_sid: string;
-  sid: string;
+  account_sid: string | null;
+  conversation_sid: string | null;
+  sid: string | null;
   index: number;
-  author: string | null;
-  body: string | null;
-  media: Array<Record<string, unknown>> | null;
+  author?: string | null;
+  body?: string | null;
+  media?: Array<Record<string, unknown>> | null;
   attributes: string | null;
-  participant_sid: string | null;
+  participant_sid?: string | null;
   date_created: string | null;
   date_updated: string | null;
   url: string | null;
-  delivery: Record<string, unknown> | null;
-  links: Record<string, string> | null;
-  content_sid: string | null;
+  delivery?: Record<string, unknown> | null;
+  links?: Record<string, string> | null;
+  content_sid?: string | null;
 }
 
 export interface ConversationsV1ConversationMessageList {
@@ -90,14 +94,16 @@ export interface ConversationsV1ConversationMessageList {
 export interface CreateConversationsV1ConversationMessageRequest {
   Author?: string;
   Body?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   ContentSid?: string;
 }
 
 export interface UpdateConversationsV1ConversationMessageRequest {
   Author?: string;
   Body?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
 }
 
 // ---------------------------------------------------------------------------
@@ -107,13 +113,13 @@ export interface UpdateConversationsV1ConversationMessageRequest {
 export type DeliveryReceiptStatus = 'read' | 'failed' | 'delivered' | 'undelivered' | 'sent';
 
 export interface ConversationsV1ConversationMessageReceipt {
-  account_sid: string;
-  conversation_sid: string;
-  sid: string;
-  message_sid: string;
-  channel_message_sid: string | null;
-  participant_sid: string | null;
-  status: DeliveryReceiptStatus;
+  account_sid: string | null;
+  conversation_sid: string | null;
+  sid: string | null;
+  message_sid: string | null;
+  channel_message_sid?: string | null;
+  participant_sid?: string | null;
+  status: Open<DeliveryReceiptStatus>;
   error_code: number;
   date_created: string | null;
   date_updated: string | null;
@@ -131,18 +137,18 @@ export interface ConversationsV1ConversationMessageReceiptList {
 
 /** A participant in a conversation (`MB…`). */
 export interface ConversationsV1ConversationParticipant {
-  account_sid: string;
-  conversation_sid: string;
-  sid: string;
-  identity: string | null;
+  account_sid: string | null;
+  conversation_sid: string | null;
+  sid: string | null;
+  identity?: string | null;
   attributes: string | null;
-  messaging_binding: Record<string, unknown> | null;
-  role_sid: string | null;
+  messaging_binding?: Record<string, unknown> | null;
+  role_sid?: string | null;
   date_created: string | null;
   date_updated: string | null;
   url: string | null;
-  last_read_message_index: number | null;
-  last_read_timestamp: string | null;
+  last_read_message_index?: number | null;
+  last_read_timestamp?: string | null;
 }
 
 export interface ConversationsV1ConversationParticipantList {
@@ -152,7 +158,8 @@ export interface ConversationsV1ConversationParticipantList {
 
 export interface CreateConversationsV1ConversationParticipantRequest {
   Identity?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   RoleSid?: string;
   'MessagingBinding.Address'?: string;
   'MessagingBinding.ProxyAddress'?: string;
@@ -161,7 +168,8 @@ export interface CreateConversationsV1ConversationParticipantRequest {
 
 export interface UpdateConversationsV1ConversationParticipantRequest {
   Identity?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   RoleSid?: string;
   LastReadMessageIndex?: number;
   LastReadTimestamp?: string;
@@ -174,12 +182,12 @@ export interface UpdateConversationsV1ConversationParticipantRequest {
 export type ScopedWebhookTarget = 'webhook' | 'trigger' | 'studio';
 
 export interface ConversationsV1ConversationScopedWebhook {
-  sid: string;
-  account_sid: string;
-  conversation_sid: string;
-  target: string | null;
+  sid: string | null;
+  account_sid: string | null;
+  conversation_sid: string | null;
+  target?: string | null;
   url: string | null;
-  configuration: Record<string, unknown> | null;
+  configuration?: Record<string, unknown> | null;
   date_created: string | null;
   date_updated: string | null;
 }
@@ -210,11 +218,11 @@ export interface UpdateConversationsV1ConversationScopedWebhookRequest {
 export type ConversationsRoleType = 'conversation' | 'service';
 
 export interface ConversationsV1Role {
-  sid: string;
-  account_sid: string;
-  chat_service_sid: string | null;
-  friendly_name: string | null;
-  type: ConversationsRoleType;
+  sid: string | null;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  friendly_name?: string | null;
+  type: Open<ConversationsRoleType>;
   permissions: string[] | null;
   date_created: string | null;
   date_updated: string | null;
@@ -241,19 +249,19 @@ export interface UpdateConversationsV1RoleRequest {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1User {
-  sid: string;
-  account_sid: string;
-  chat_service_sid: string | null;
-  role_sid: string | null;
-  identity: string | null;
-  friendly_name: string | null;
+  sid: string | null;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  role_sid?: string | null;
+  identity?: string | null;
+  friendly_name?: string | null;
   attributes: string | null;
-  is_online: boolean | null;
-  is_notifiable: boolean | null;
+  is_online?: boolean | null;
+  is_notifiable?: boolean | null;
   date_created: string | null;
   date_updated: string | null;
   url: string | null;
-  links: Record<string, string> | null;
+  links?: Record<string, string> | null;
 }
 
 export interface ConversationsV1UserList {
@@ -264,13 +272,15 @@ export interface ConversationsV1UserList {
 export interface CreateConversationsV1UserRequest {
   Identity: string;
   FriendlyName?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   RoleSid?: string;
 }
 
 export interface UpdateConversationsV1UserRequest {
   FriendlyName?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   RoleSid?: string;
 }
 
@@ -281,24 +291,24 @@ export interface UpdateConversationsV1UserRequest {
 export type UserConversationNotificationLevel = 'default' | 'muted';
 
 export interface ConversationsV1UserConversation {
-  account_sid: string;
-  chat_service_sid: string | null;
-  conversation_sid: string | null;
-  unread_messages_count: number | null;
-  last_read_message_index: number | null;
-  participant_sid: string | null;
-  user_sid: string | null;
-  friendly_name: string | null;
-  conversation_state: 'inactive' | 'active' | 'closed';
-  timers: Record<string, unknown> | null;
-  attributes: string | null;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  conversation_sid?: string | null;
+  unread_messages_count?: number | null;
+  last_read_message_index?: number | null;
+  participant_sid?: string | null;
+  user_sid?: string | null;
+  friendly_name?: string | null;
+  conversation_state: Open<'inactive' | 'active' | 'closed'>;
+  timers?: Record<string, unknown> | null;
+  attributes?: string | null;
   date_created: string | null;
   date_updated: string | null;
-  created_by: string | null;
-  notification_level: UserConversationNotificationLevel;
-  unique_name: string | null;
+  created_by?: string | null;
+  notification_level: Open<UserConversationNotificationLevel>;
+  unique_name?: string | null;
   url: string | null;
-  links: Record<string, string> | null;
+  links?: Record<string, string> | null;
 }
 
 export interface ConversationsV1UserConversationList {
@@ -319,11 +329,11 @@ export interface UpdateConversationsV1UserConversationRequest {
 export type ConversationsCredentialType = 'apn' | 'gcm' | 'fcm';
 
 export interface ConversationsV1Credential {
-  sid: string;
-  account_sid: string;
-  friendly_name: string | null;
-  type: ConversationsCredentialType;
-  sandbox: string | null;
+  sid: string | null;
+  account_sid: string | null;
+  friendly_name?: string | null;
+  type: Open<ConversationsCredentialType>;
+  sandbox?: string | null;
   date_created: string | null;
   date_updated: string | null;
   url: string | null;
@@ -359,13 +369,13 @@ export interface UpdateConversationsV1CredentialRequest {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1Configuration {
-  account_sid: string;
-  default_chat_service_sid: string | null;
-  default_messaging_service_sid: string | null;
-  default_inactive_timer: string | null;
-  default_closed_timer: string | null;
+  account_sid: string | null;
+  default_chat_service_sid?: string | null;
+  default_messaging_service_sid?: string | null;
+  default_inactive_timer?: string | null;
+  default_closed_timer?: string | null;
   url: string | null;
-  links: Record<string, string> | null;
+  links?: Record<string, string> | null;
 }
 
 export interface UpdateConversationsV1ConfigurationRequest {
@@ -382,12 +392,12 @@ export interface UpdateConversationsV1ConfigurationRequest {
 export type ConfigurationWebhookTarget = 'webhook' | 'flex';
 
 export interface ConversationsV1ConfigurationWebhook {
-  account_sid: string;
-  method: 'GET' | 'POST';
-  filters: string[] | null;
-  pre_webhook_url: string | null;
-  post_webhook_url: string | null;
-  target: ConfigurationWebhookTarget;
+  account_sid: string | null;
+  method: Open<'GET' | 'POST'>;
+  filters?: string[] | null;
+  pre_webhook_url?: string | null;
+  post_webhook_url?: string | null;
+  target: Open<ConfigurationWebhookTarget>;
   url: string | null;
 }
 
@@ -416,16 +426,16 @@ export type ConfigAddressType =
 export type ConfigAddressAutoCreationType = 'webhook' | 'studio' | 'default';
 
 export interface ConversationsV1ConfigAddress {
-  sid: string;
-  account_sid: string;
-  type: string | null;
-  address: string | null;
-  friendly_name: string | null;
-  auto_creation: Record<string, unknown> | null;
+  sid: string | null;
+  account_sid: string | null;
+  type?: string | null;
+  address?: string | null;
+  friendly_name?: string | null;
+  auto_creation?: Record<string, unknown> | null;
   date_created: string | null;
   date_updated: string | null;
   url: string | null;
-  address_country: string | null;
+  address_country?: string | null;
 }
 
 export interface ConversationsV1ConfigAddressList {
@@ -455,22 +465,22 @@ export interface UpdateConversationsV1ConfigAddressRequest {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ParticipantConversation {
-  account_sid: string;
-  chat_service_sid: string | null;
-  participant_sid: string | null;
-  participant_user_sid: string | null;
-  participant_identity: string | null;
-  participant_messaging_binding: Record<string, unknown> | null;
-  conversation_sid: string | null;
-  conversation_unique_name: string | null;
-  conversation_friendly_name: string | null;
-  conversation_attributes: string | null;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  participant_sid?: string | null;
+  participant_user_sid?: string | null;
+  participant_identity?: string | null;
+  participant_messaging_binding?: Record<string, unknown> | null;
+  conversation_sid?: string | null;
+  conversation_unique_name?: string | null;
+  conversation_friendly_name?: string | null;
+  conversation_attributes?: string | null;
   conversation_date_created: string | null;
   conversation_date_updated: string | null;
-  conversation_created_by: string | null;
-  conversation_state: 'inactive' | 'active' | 'closed';
-  conversation_timers: Record<string, unknown> | null;
-  links: Record<string, string> | null;
+  conversation_created_by?: string | null;
+  conversation_state: Open<'inactive' | 'active' | 'closed'>;
+  conversation_timers?: Record<string, unknown> | null;
+  links?: Record<string, string> | null;
 }
 
 export interface ConversationsV1ParticipantConversationList {
@@ -482,7 +492,6 @@ export interface ListConversationsV1ParticipantConversationParams {
   Identity?: string;
   Address?: string;
   PageSize?: number;
-  [key: string]: unknown;
 }
 
 // ---------------------------------------------------------------------------
@@ -490,19 +499,19 @@ export interface ListConversationsV1ParticipantConversationParams {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ConversationWithParticipants {
-  account_sid: string;
-  chat_service_sid: string | null;
-  messaging_service_sid: string | null;
-  sid: string;
-  friendly_name: string | null;
-  unique_name: string | null;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  messaging_service_sid?: string | null;
+  sid: string | null;
+  friendly_name?: string | null;
+  unique_name?: string | null;
   attributes: string | null;
-  state: ConversationState;
+  state: Open<ConversationState>;
   date_created: string | null;
   date_updated: string | null;
-  timers: Record<string, unknown> | null;
-  links: Record<string, string> | null;
-  bindings: Record<string, unknown> | null;
+  timers?: Record<string, unknown> | null;
+  links?: Record<string, string> | null;
+  bindings?: Record<string, unknown> | null;
   url: string | null;
 }
 
@@ -510,12 +519,14 @@ export interface CreateConversationsV1ConversationWithParticipantsRequest {
   FriendlyName?: string;
   UniqueName?: string;
   MessagingServiceSid?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   State?: ConversationState;
   'Timers.Inactive'?: string;
   'Timers.Closed'?: string;
   /** Repeated form field; each value a JSON participant spec. */
-  Participant?: string[];
+  /** Participants as JSON objects (or serialised strings); repeated `Participant` keys. */
+  Participant?: Array<string | JsonObject>;
 }
 
 // ---------------------------------------------------------------------------
@@ -547,13 +558,10 @@ export interface CreateConversationsV1ServiceRequest {
 
 export interface ListConversationsV1PageParams {
   PageSize?: number;
-  // Index signature so the interface satisfies the transport's
-  // `params: Record<string, unknown>` constraint without a cast.
-  [key: string]: unknown;
 }
 
 // ===========================================================================
-// Phase 4: service-scoped Conversations v1 surface
+// Service-scoped Conversations v1 resources
 // (`/v1/Services/{ChatServiceSid}/…`)
 //
 // The response schemas mirror the account-level shapes with the addition of
@@ -569,20 +577,20 @@ export interface ListConversationsV1PageParams {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ServiceConversation {
-  account_sid: string;
-  chat_service_sid: string | null;
-  messaging_service_sid: string | null;
-  sid: string;
-  friendly_name: string | null;
-  unique_name: string | null;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  messaging_service_sid?: string | null;
+  sid: string | null;
+  friendly_name?: string | null;
+  unique_name?: string | null;
   attributes: string | null;
-  state: ConversationState;
+  state: Open<ConversationState>;
   date_created: string | null;
   date_updated: string | null;
-  timers: Record<string, unknown> | null;
+  timers?: Record<string, unknown> | null;
   url: string | null;
-  links: Record<string, string> | null;
-  bindings: Record<string, unknown> | null;
+  links?: Record<string, string> | null;
+  bindings?: Record<string, unknown> | null;
 }
 
 export interface ConversationsV1ServiceConversationList {
@@ -594,7 +602,8 @@ export interface CreateConversationsV1ServiceConversationRequest {
   FriendlyName?: string;
   UniqueName?: string;
   MessagingServiceSid?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   State?: ConversationState;
   'Timers.Inactive'?: string;
   'Timers.Closed'?: string;
@@ -603,7 +612,8 @@ export interface CreateConversationsV1ServiceConversationRequest {
 export interface UpdateConversationsV1ServiceConversationRequest {
   FriendlyName?: string;
   UniqueName?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   State?: ConversationState;
   'Timers.Inactive'?: string;
   'Timers.Closed'?: string;
@@ -615,22 +625,22 @@ export interface UpdateConversationsV1ServiceConversationRequest {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ServiceConversationMessage {
-  account_sid: string;
-  chat_service_sid: string | null;
-  conversation_sid: string;
-  sid: string;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  conversation_sid: string | null;
+  sid: string | null;
   index: number;
-  author: string | null;
-  body: string | null;
-  media: Array<Record<string, unknown>> | null;
+  author?: string | null;
+  body?: string | null;
+  media?: Array<Record<string, unknown>> | null;
   attributes: string | null;
-  participant_sid: string | null;
+  participant_sid?: string | null;
   date_created: string | null;
   date_updated: string | null;
   url: string | null;
-  delivery: Record<string, unknown> | null;
-  links: Record<string, string> | null;
-  content_sid: string | null;
+  delivery?: Record<string, unknown> | null;
+  links?: Record<string, string> | null;
+  content_sid?: string | null;
 }
 
 export interface ConversationsV1ServiceConversationMessageList {
@@ -641,14 +651,16 @@ export interface ConversationsV1ServiceConversationMessageList {
 export interface CreateConversationsV1ServiceConversationMessageRequest {
   Author?: string;
   Body?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   ContentSid?: string;
 }
 
 export interface UpdateConversationsV1ServiceConversationMessageRequest {
   Author?: string;
   Body?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
 }
 
 // ---------------------------------------------------------------------------
@@ -656,14 +668,14 @@ export interface UpdateConversationsV1ServiceConversationMessageRequest {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ServiceConversationMessageReceipt {
-  account_sid: string;
-  chat_service_sid: string | null;
-  conversation_sid: string;
-  sid: string;
-  message_sid: string;
-  channel_message_sid: string | null;
-  participant_sid: string | null;
-  status: DeliveryReceiptStatus;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  conversation_sid: string | null;
+  sid: string | null;
+  message_sid: string | null;
+  channel_message_sid?: string | null;
+  participant_sid?: string | null;
+  status: Open<DeliveryReceiptStatus>;
   error_code: number;
   date_created: string | null;
   date_updated: string | null;
@@ -681,19 +693,19 @@ export interface ConversationsV1ServiceConversationMessageReceiptList {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ServiceConversationParticipant {
-  account_sid: string;
-  chat_service_sid: string | null;
-  conversation_sid: string;
-  sid: string;
-  identity: string | null;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  conversation_sid: string | null;
+  sid: string | null;
+  identity?: string | null;
   attributes: string | null;
-  messaging_binding: Record<string, unknown> | null;
-  role_sid: string | null;
+  messaging_binding?: Record<string, unknown> | null;
+  role_sid?: string | null;
   date_created: string | null;
   date_updated: string | null;
   url: string | null;
-  last_read_message_index: number | null;
-  last_read_timestamp: string | null;
+  last_read_message_index?: number | null;
+  last_read_timestamp?: string | null;
 }
 
 export interface ConversationsV1ServiceConversationParticipantList {
@@ -703,7 +715,8 @@ export interface ConversationsV1ServiceConversationParticipantList {
 
 export interface CreateConversationsV1ServiceConversationParticipantRequest {
   Identity?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   RoleSid?: string;
   'MessagingBinding.Address'?: string;
   'MessagingBinding.ProxyAddress'?: string;
@@ -716,7 +729,8 @@ export interface CreateConversationsV1ServiceConversationParticipantRequest {
  * Spec only allows `Attributes` and `RoleSid` (no identity/last-read fields).
  */
 export interface UpdateConversationsV1ServiceConversationParticipantRequest {
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   RoleSid?: string;
 }
 
@@ -726,13 +740,13 @@ export interface UpdateConversationsV1ServiceConversationParticipantRequest {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ServiceConversationScopedWebhook {
-  sid: string;
-  account_sid: string;
-  chat_service_sid: string | null;
-  conversation_sid: string;
-  target: string | null;
+  sid: string | null;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  conversation_sid: string | null;
+  target?: string | null;
   url: string | null;
-  configuration: Record<string, unknown> | null;
+  configuration?: Record<string, unknown> | null;
   date_created: string | null;
   date_updated: string | null;
 }
@@ -765,19 +779,19 @@ export interface UpdateConversationsV1ServiceConversationScopedWebhookRequest {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ServiceConversationWithParticipants {
-  account_sid: string;
-  chat_service_sid: string | null;
-  messaging_service_sid: string | null;
-  sid: string;
-  friendly_name: string | null;
-  unique_name: string | null;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  messaging_service_sid?: string | null;
+  sid: string | null;
+  friendly_name?: string | null;
+  unique_name?: string | null;
   attributes: string | null;
-  state: ConversationState;
+  state: Open<ConversationState>;
   date_created: string | null;
   date_updated: string | null;
-  timers: Record<string, unknown> | null;
-  links: Record<string, string> | null;
-  bindings: Record<string, unknown> | null;
+  timers?: Record<string, unknown> | null;
+  links?: Record<string, string> | null;
+  bindings?: Record<string, unknown> | null;
   url: string | null;
 }
 
@@ -785,12 +799,14 @@ export interface CreateConversationsV1ServiceConversationWithParticipantsRequest
   FriendlyName?: string;
   UniqueName?: string;
   MessagingServiceSid?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   State?: ConversationState;
   'Timers.Inactive'?: string;
   'Timers.Closed'?: string;
   /** Repeated form field; each value a JSON participant spec. */
-  Participant?: string[];
+  /** Participants as JSON objects (or serialised strings); repeated `Participant` keys. */
+  Participant?: Array<string | JsonObject>;
 }
 
 // ---------------------------------------------------------------------------
@@ -799,22 +815,22 @@ export interface CreateConversationsV1ServiceConversationWithParticipantsRequest
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ServiceParticipantConversation {
-  account_sid: string;
-  chat_service_sid: string | null;
-  participant_sid: string | null;
-  participant_user_sid: string | null;
-  participant_identity: string | null;
-  participant_messaging_binding: Record<string, unknown> | null;
-  conversation_sid: string | null;
-  conversation_unique_name: string | null;
-  conversation_friendly_name: string | null;
-  conversation_attributes: string | null;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  participant_sid?: string | null;
+  participant_user_sid?: string | null;
+  participant_identity?: string | null;
+  participant_messaging_binding?: Record<string, unknown> | null;
+  conversation_sid?: string | null;
+  conversation_unique_name?: string | null;
+  conversation_friendly_name?: string | null;
+  conversation_attributes?: string | null;
   conversation_date_created: string | null;
   conversation_date_updated: string | null;
-  conversation_created_by: string | null;
-  conversation_state: 'inactive' | 'active' | 'closed';
-  conversation_timers: Record<string, unknown> | null;
-  links: Record<string, string> | null;
+  conversation_created_by?: string | null;
+  conversation_state: Open<'inactive' | 'active' | 'closed'>;
+  conversation_timers?: Record<string, unknown> | null;
+  links?: Record<string, string> | null;
 }
 
 export interface ConversationsV1ServiceParticipantConversationList {
@@ -826,7 +842,6 @@ export interface ListConversationsV1ServiceParticipantConversationParams {
   Identity?: string;
   Address?: string;
   PageSize?: number;
-  [key: string]: unknown;
 }
 
 // ---------------------------------------------------------------------------
@@ -835,24 +850,24 @@ export interface ListConversationsV1ServiceParticipantConversationParams {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ServiceUserConversation {
-  account_sid: string;
-  chat_service_sid: string | null;
-  conversation_sid: string | null;
-  unread_messages_count: number | null;
-  last_read_message_index: number | null;
-  participant_sid: string | null;
-  user_sid: string | null;
-  friendly_name: string | null;
-  conversation_state: 'inactive' | 'active' | 'closed';
-  timers: Record<string, unknown> | null;
-  attributes: string | null;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  conversation_sid?: string | null;
+  unread_messages_count?: number | null;
+  last_read_message_index?: number | null;
+  participant_sid?: string | null;
+  user_sid?: string | null;
+  friendly_name?: string | null;
+  conversation_state: Open<'inactive' | 'active' | 'closed'>;
+  timers?: Record<string, unknown> | null;
+  attributes?: string | null;
   date_created: string | null;
   date_updated: string | null;
-  created_by: string | null;
-  notification_level: UserConversationNotificationLevel;
-  unique_name: string | null;
+  created_by?: string | null;
+  notification_level: Open<UserConversationNotificationLevel>;
+  unique_name?: string | null;
   url: string | null;
-  links: Record<string, string> | null;
+  links?: Record<string, string> | null;
 }
 
 export interface ConversationsV1ServiceUserConversationList {
@@ -865,11 +880,11 @@ export interface ConversationsV1ServiceUserConversationList {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ServiceRole {
-  sid: string;
-  account_sid: string;
-  chat_service_sid: string | null;
-  friendly_name: string | null;
-  type: ConversationsRoleType;
+  sid: string | null;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  friendly_name?: string | null;
+  type: Open<ConversationsRoleType>;
   permissions: string[] | null;
   date_created: string | null;
   date_updated: string | null;
@@ -896,19 +911,19 @@ export interface UpdateConversationsV1ServiceRoleRequest {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ServiceUser {
-  sid: string;
-  account_sid: string;
-  chat_service_sid: string | null;
-  role_sid: string | null;
-  identity: string | null;
-  friendly_name: string | null;
+  sid: string | null;
+  account_sid: string | null;
+  chat_service_sid?: string | null;
+  role_sid?: string | null;
+  identity?: string | null;
+  friendly_name?: string | null;
   attributes: string | null;
-  is_online: boolean | null;
-  is_notifiable: boolean | null;
+  is_online?: boolean | null;
+  is_notifiable?: boolean | null;
   date_created: string | null;
   date_updated: string | null;
   url: string | null;
-  links: Record<string, string> | null;
+  links?: Record<string, string> | null;
 }
 
 export interface ConversationsV1ServiceUserList {
@@ -919,13 +934,15 @@ export interface ConversationsV1ServiceUserList {
 export interface CreateConversationsV1ServiceUserRequest {
   Identity: string;
   FriendlyName?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   RoleSid?: string;
 }
 
 export interface UpdateConversationsV1ServiceUserRequest {
   FriendlyName?: string;
-  Attributes?: string;
+  /** JSON object (or its serialised string); an object is sent as compact JSON. */
+  Attributes?: string | JsonObject;
   RoleSid?: string;
 }
 
@@ -936,17 +953,17 @@ export interface UpdateConversationsV1ServiceUserRequest {
 export type ServiceBindingType = 'apn' | 'gcm' | 'fcm' | 'twilsock';
 
 export interface ConversationsV1ServiceBinding {
-  sid: string;
-  account_sid: string | null;
-  chat_service_sid: string | null;
-  credential_sid: string | null;
-  date_created: string | null;
-  date_updated: string | null;
-  endpoint: string | null;
-  identity: string | null;
-  binding_type: ServiceBindingType;
-  message_types: string[] | null;
-  url: string | null;
+  sid: string | null;
+  account_sid?: string | null;
+  chat_service_sid?: string | null;
+  credential_sid?: string | null;
+  date_created?: string | null;
+  date_updated?: string | null;
+  endpoint?: string | null;
+  identity?: string | null;
+  binding_type?: Open<ServiceBindingType>;
+  message_types?: string[] | null;
+  url?: string | null;
 }
 
 export interface ConversationsV1ServiceBindingList {
@@ -958,7 +975,6 @@ export interface ListConversationsV1ServiceBindingParams {
   BindingType?: ServiceBindingType;
   Identity?: string;
   PageSize?: number;
-  [key: string]: unknown;
 }
 
 // ---------------------------------------------------------------------------
@@ -966,13 +982,13 @@ export interface ListConversationsV1ServiceBindingParams {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ServiceConfiguration {
-  chat_service_sid: string | null;
-  default_conversation_creator_role_sid: string | null;
-  default_conversation_role_sid: string | null;
-  default_chat_service_role_sid: string | null;
-  url: string | null;
-  links: Record<string, string> | null;
-  reachability_enabled: boolean | null;
+  chat_service_sid?: string | null;
+  default_conversation_creator_role_sid?: string | null;
+  default_conversation_role_sid?: string | null;
+  default_chat_service_role_sid?: string | null;
+  url?: string | null;
+  links?: Record<string, string> | null;
+  reachability_enabled?: boolean | null;
 }
 
 export interface UpdateConversationsV1ServiceConfigurationRequest {
@@ -988,13 +1004,13 @@ export interface UpdateConversationsV1ServiceConfigurationRequest {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ServiceNotification {
-  account_sid: string | null;
-  chat_service_sid: string | null;
-  new_message: Record<string, unknown> | null;
-  added_to_conversation: Record<string, unknown> | null;
-  removed_from_conversation: Record<string, unknown> | null;
-  log_enabled: boolean | null;
-  url: string | null;
+  account_sid?: string | null;
+  chat_service_sid?: string | null;
+  new_message?: Record<string, unknown> | null;
+  added_to_conversation?: Record<string, unknown> | null;
+  removed_from_conversation?: Record<string, unknown> | null;
+  log_enabled?: boolean | null;
+  url?: string | null;
 }
 
 export interface UpdateConversationsV1ServiceNotificationRequest {
@@ -1019,13 +1035,13 @@ export interface UpdateConversationsV1ServiceNotificationRequest {
 // ---------------------------------------------------------------------------
 
 export interface ConversationsV1ServiceWebhookConfiguration {
-  account_sid: string | null;
-  chat_service_sid: string | null;
-  pre_webhook_url: string | null;
-  post_webhook_url: string | null;
-  filters: string[] | null;
-  method: 'GET' | 'POST';
-  url: string | null;
+  account_sid?: string | null;
+  chat_service_sid?: string | null;
+  pre_webhook_url?: string | null;
+  post_webhook_url?: string | null;
+  filters?: string[] | null;
+  method?: Open<'GET' | 'POST'>;
+  url?: string | null;
 }
 
 export interface UpdateConversationsV1ServiceWebhookConfigurationRequest {

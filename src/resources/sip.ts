@@ -6,6 +6,7 @@ import type {
   CreateSipIpAccessControlListMappingRequest,
   CreateSipIpAccessControlListRequest,
   CreateSipIpAddressRequest,
+  ListSipFilteredPageParams,
   ListSipPageParams,
   SipCredential,
   SipCredentialList,
@@ -20,6 +21,8 @@ import type {
   SipIpAccessControlListMappingList,
   SipIpAddress,
   SipIpAddressList,
+  SipRegistration,
+  SipRegistrationList,
   UpdateSipCredentialListRequest,
   UpdateSipCredentialRequest,
   UpdateSipDomainRequest,
@@ -27,6 +30,7 @@ import type {
   UpdateSipIpAddressRequest,
 } from '../models/index.js';
 import type { Transport } from '../transport.js';
+import { paginate } from '../pagination.js';
 import { BaseResource } from './base.js';
 
 /**
@@ -42,16 +46,35 @@ import { BaseResource } from './base.js';
  *   Per-list credentials live under `credentialLists.credentials(clSid)`.
  * - `client.sip.ipAccessControlLists` — named bags of CIDR-bound IPs (`AL…`).
  *   Per-list IP entries live under `ipAccessControlLists.ipAddresses(aclSid)`.
+ * - `client.sip.registrations` — live SIP registrations across the account's domains.
  */
 export class SipResource {
   readonly domains: SipDomainsResource;
   readonly credentialLists: SipCredentialListsResource;
   readonly ipAccessControlLists: SipIpAccessControlListsResource;
+  readonly registrations: SipRegistrationsResource;
 
   constructor(transport: Transport) {
     this.domains = new SipDomainsResource(transport);
     this.credentialLists = new SipCredentialListsResource(transport);
     this.ipAccessControlLists = new SipIpAccessControlListsResource(transport);
+    this.registrations = new SipRegistrationsResource(transport);
+  }
+}
+
+/** `/SIP/Registrations.json` — endpoints currently registered against the account's domains. */
+export class SipRegistrationsResource extends BaseResource {
+  async list(params: ListSipPageParams = {}): Promise<SipRegistrationList> {
+    return this.t.request<SipRegistrationList>({
+      method: 'GET',
+      path: this.path('SIP', 'Registrations'),
+      params,
+    });
+  }
+
+  /** Lazily walk every page of `/SIP/Registrations`, following `next_page_uri`. */
+  async *iterate(params: ListSipPageParams = {}): AsyncGenerator<SipRegistration, void, void> {
+    yield* paginate(this.t, await this.list(params));
   }
 }
 
@@ -78,7 +101,7 @@ export class SipDomainCredentialListMappingsResource extends BaseResource {
           'CredentialListMappings', ...(tail ? [tail] : []));
   }
 
-  list(params: ListSipPageParams = {}): Promise<SipCredentialListMappingList> {
+  async list(params: ListSipPageParams = {}): Promise<SipCredentialListMappingList> {
     return this.t.request<SipCredentialListMappingList>({
       method: 'GET',
       path: this.root(),
@@ -86,7 +109,7 @@ export class SipDomainCredentialListMappingsResource extends BaseResource {
     });
   }
 
-  create(body: CreateSipCredentialListMappingRequest): Promise<SipDomainMapping> {
+  async create(body: CreateSipCredentialListMappingRequest): Promise<SipDomainMapping> {
     return this.t.request<SipDomainMapping>({
       method: 'POST',
       path: this.root(),
@@ -94,7 +117,7 @@ export class SipDomainCredentialListMappingsResource extends BaseResource {
     });
   }
 
-  fetch(mappingSid: string): Promise<SipDomainMapping> {
+  async fetch(mappingSid: string): Promise<SipDomainMapping> {
     return this.t.request<SipDomainMapping>({
       method: 'GET',
       path: this.root(mappingSid),
@@ -128,7 +151,7 @@ export class SipDomainIpAccessControlListMappingsResource extends BaseResource {
           'IpAccessControlListMappings', ...(tail ? [tail] : []));
   }
 
-  list(params: ListSipPageParams = {}): Promise<SipIpAccessControlListMappingList> {
+  async list(params: ListSipPageParams = {}): Promise<SipIpAccessControlListMappingList> {
     return this.t.request<SipIpAccessControlListMappingList>({
       method: 'GET',
       path: this.root(),
@@ -136,7 +159,7 @@ export class SipDomainIpAccessControlListMappingsResource extends BaseResource {
     });
   }
 
-  create(body: CreateSipIpAccessControlListMappingRequest): Promise<SipDomainMapping> {
+  async create(body: CreateSipIpAccessControlListMappingRequest): Promise<SipDomainMapping> {
     return this.t.request<SipDomainMapping>({
       method: 'POST',
       path: this.root(),
@@ -144,7 +167,7 @@ export class SipDomainIpAccessControlListMappingsResource extends BaseResource {
     });
   }
 
-  fetch(mappingSid: string): Promise<SipDomainMapping> {
+  async fetch(mappingSid: string): Promise<SipDomainMapping> {
     return this.t.request<SipDomainMapping>({
       method: 'GET',
       path: this.root(mappingSid),
@@ -209,7 +232,7 @@ export class SipDomainsResource extends BaseResource {
     this.auth = new SipDomainAuthResource(transport);
   }
 
-  list(params: ListSipPageParams = {}): Promise<SipDomainList> {
+  async list(params: ListSipFilteredPageParams = {}): Promise<SipDomainList> {
     return this.t.request<SipDomainList>({
       method: 'GET',
       path: this.path('SIP', 'Domains'),
@@ -217,7 +240,7 @@ export class SipDomainsResource extends BaseResource {
     });
   }
 
-  create(body: CreateSipDomainRequest): Promise<SipDomain> {
+  async create(body: CreateSipDomainRequest): Promise<SipDomain> {
     return this.t.request<SipDomain>({
       method: 'POST',
       path: this.path('SIP', 'Domains'),
@@ -225,14 +248,14 @@ export class SipDomainsResource extends BaseResource {
     });
   }
 
-  fetch(domainSid: string): Promise<SipDomain> {
+  async fetch(domainSid: string): Promise<SipDomain> {
     return this.t.request<SipDomain>({
       method: 'GET',
       path: this.path('SIP', 'Domains', domainSid),
     });
   }
 
-  update(domainSid: string, body: UpdateSipDomainRequest): Promise<SipDomain> {
+  async update(domainSid: string, body: UpdateSipDomainRequest): Promise<SipDomain> {
     return this.t.request<SipDomain>({
       method: 'POST',
       path: this.path('SIP', 'Domains', domainSid),
@@ -247,15 +270,9 @@ export class SipDomainsResource extends BaseResource {
     });
   }
 
-  /** Walk every page of `/SIP/Domains` and yield individual records. */
-  async *iterate(params: ListSipPageParams = {}): AsyncGenerator<SipDomain, void, void> {
-    let page = params.Page ?? 0;
-    while (true) {
-      const chunk = await this.list({ ...params, Page: page });
-      for (const item of chunk.domains) yield item;
-      if (!chunk.next_page_uri || chunk.domains.length === 0) return;
-      page += 1;
-    }
+  /** Lazily walk every page of `/SIP/Domains`, following `next_page_uri`. */
+  async *iterate(params: ListSipFilteredPageParams = {}): AsyncGenerator<SipDomain, void, void> {
+    yield* paginate(this.t, await this.list(params));
   }
 
   credentialListMappings(domainSid: string): SipDomainCredentialListMappingsResource {
@@ -284,7 +301,7 @@ export class SipCredentialsResource extends BaseResource {
       'Credentials', ...(tail ? [tail] : []));
   }
 
-  list(params: ListSipPageParams = {}): Promise<SipCredentialListPage> {
+  async list(params: ListSipPageParams = {}): Promise<SipCredentialListPage> {
     return this.t.request<SipCredentialListPage>({
       method: 'GET',
       path: this.root(),
@@ -292,7 +309,7 @@ export class SipCredentialsResource extends BaseResource {
     });
   }
 
-  create(body: CreateSipCredentialRequest): Promise<SipCredential> {
+  async create(body: CreateSipCredentialRequest): Promise<SipCredential> {
     return this.t.request<SipCredential>({
       method: 'POST',
       path: this.root(),
@@ -300,14 +317,14 @@ export class SipCredentialsResource extends BaseResource {
     });
   }
 
-  fetch(credentialSid: string): Promise<SipCredential> {
+  async fetch(credentialSid: string): Promise<SipCredential> {
     return this.t.request<SipCredential>({
       method: 'GET',
       path: this.root(credentialSid),
     });
   }
 
-  update(credentialSid: string, body: UpdateSipCredentialRequest): Promise<SipCredential> {
+  async update(credentialSid: string, body: UpdateSipCredentialRequest): Promise<SipCredential> {
     return this.t.request<SipCredential>({
       method: 'POST',
       path: this.root(credentialSid),
@@ -324,7 +341,7 @@ export class SipCredentialsResource extends BaseResource {
 }
 
 export class SipCredentialListsResource extends BaseResource {
-  list(params: ListSipPageParams = {}): Promise<SipCredentialListList> {
+  async list(params: ListSipFilteredPageParams = {}): Promise<SipCredentialListList> {
     return this.t.request<SipCredentialListList>({
       method: 'GET',
       path: this.path('SIP', 'CredentialLists'),
@@ -332,7 +349,7 @@ export class SipCredentialListsResource extends BaseResource {
     });
   }
 
-  create(body: CreateSipCredentialListRequest): Promise<SipCredentialList> {
+  async create(body: CreateSipCredentialListRequest): Promise<SipCredentialList> {
     return this.t.request<SipCredentialList>({
       method: 'POST',
       path: this.path('SIP', 'CredentialLists'),
@@ -340,14 +357,14 @@ export class SipCredentialListsResource extends BaseResource {
     });
   }
 
-  fetch(credentialListSid: string): Promise<SipCredentialList> {
+  async fetch(credentialListSid: string): Promise<SipCredentialList> {
     return this.t.request<SipCredentialList>({
       method: 'GET',
       path: this.path('SIP', 'CredentialLists', credentialListSid),
     });
   }
 
-  update(
+  async update(
     credentialListSid: string,
     body: UpdateSipCredentialListRequest,
   ): Promise<SipCredentialList> {
@@ -387,7 +404,7 @@ export class SipIpAddressesResource extends BaseResource {
       'IpAddresses', ...(tail ? [tail] : []));
   }
 
-  list(params: ListSipPageParams = {}): Promise<SipIpAddressList> {
+  async list(params: ListSipFilteredPageParams = {}): Promise<SipIpAddressList> {
     return this.t.request<SipIpAddressList>({
       method: 'GET',
       path: this.root(),
@@ -395,7 +412,7 @@ export class SipIpAddressesResource extends BaseResource {
     });
   }
 
-  create(body: CreateSipIpAddressRequest): Promise<SipIpAddress> {
+  async create(body: CreateSipIpAddressRequest): Promise<SipIpAddress> {
     return this.t.request<SipIpAddress>({
       method: 'POST',
       path: this.root(),
@@ -403,14 +420,14 @@ export class SipIpAddressesResource extends BaseResource {
     });
   }
 
-  fetch(ipAddressSid: string): Promise<SipIpAddress> {
+  async fetch(ipAddressSid: string): Promise<SipIpAddress> {
     return this.t.request<SipIpAddress>({
       method: 'GET',
       path: this.root(ipAddressSid),
     });
   }
 
-  update(ipAddressSid: string, body: UpdateSipIpAddressRequest): Promise<SipIpAddress> {
+  async update(ipAddressSid: string, body: UpdateSipIpAddressRequest): Promise<SipIpAddress> {
     return this.t.request<SipIpAddress>({
       method: 'POST',
       path: this.root(ipAddressSid),
@@ -427,7 +444,7 @@ export class SipIpAddressesResource extends BaseResource {
 }
 
 export class SipIpAccessControlListsResource extends BaseResource {
-  list(params: ListSipPageParams = {}): Promise<SipIpAccessControlListList> {
+  async list(params: ListSipFilteredPageParams = {}): Promise<SipIpAccessControlListList> {
     return this.t.request<SipIpAccessControlListList>({
       method: 'GET',
       path: this.path('SIP', 'IpAccessControlLists'),
@@ -435,7 +452,7 @@ export class SipIpAccessControlListsResource extends BaseResource {
     });
   }
 
-  create(body: CreateSipIpAccessControlListRequest): Promise<SipIpAccessControlList> {
+  async create(body: CreateSipIpAccessControlListRequest): Promise<SipIpAccessControlList> {
     return this.t.request<SipIpAccessControlList>({
       method: 'POST',
       path: this.path('SIP', 'IpAccessControlLists'),
@@ -443,14 +460,14 @@ export class SipIpAccessControlListsResource extends BaseResource {
     });
   }
 
-  fetch(aclSid: string): Promise<SipIpAccessControlList> {
+  async fetch(aclSid: string): Promise<SipIpAccessControlList> {
     return this.t.request<SipIpAccessControlList>({
       method: 'GET',
       path: this.path('SIP', 'IpAccessControlLists', aclSid),
     });
   }
 
-  update(
+  async update(
     aclSid: string,
     body: UpdateSipIpAccessControlListRequest,
   ): Promise<SipIpAccessControlList> {

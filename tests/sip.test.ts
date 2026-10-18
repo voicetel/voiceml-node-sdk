@@ -144,7 +144,7 @@ afterEach(() => vi.restoreAllMocks());
 describe('SIP Domains', () => {
   it('list', async () => {
     const { fetch, calls } = fakeFetch([
-      jsonResponse({ domains: [domainPayload()], page: 0, page_size: 50, total: 1, next_page_uri: null, uri: '' }),
+      jsonResponse({ domains: [domainPayload()], page: 0, page_size: 50, next_page_uri: null, uri: '' }),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
     const out = await c.sip.domains.list();
@@ -221,7 +221,7 @@ describe('SIP CredentialLists', () => {
     const { fetch } = fakeFetch([
       jsonResponse({
         credential_lists: [credentialListPayload()],
-        page: 0, page_size: 50, total: 1, next_page_uri: null, uri: '',
+        page: 0, page_size: 50, next_page_uri: null, uri: '',
       }),
     ]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
@@ -235,7 +235,7 @@ describe('SIP Credentials (nested)', () => {
     const { fetch, calls } = fakeFetch([
       jsonResponse({
         credentials: [credentialPayload()],
-        page: 0, page_size: 50, total: 1, next_page_uri: null, uri: '',
+        page: 0, page_size: 50, next_page_uri: null, uri: '',
       }),
       jsonResponse(credentialPayload()),
       jsonResponse(credentialPayload()),
@@ -262,7 +262,7 @@ describe('SIP IpAccessControlLists', () => {
     const { fetch, calls } = fakeFetch([
       jsonResponse({
         ip_access_control_lists: [ipaclPayload()],
-        page: 0, page_size: 50, total: 1, next_page_uri: null, uri: '',
+        page: 0, page_size: 50, next_page_uri: null, uri: '',
       }),
       jsonResponse(ipaclPayload()),
       jsonResponse(ipaclPayload()),
@@ -287,7 +287,7 @@ describe('SIP IpAddresses (nested)', () => {
     const { fetch, calls } = fakeFetch([
       jsonResponse({
         ip_addresses: [ipAddressPayload()],
-        page: 0, page_size: 50, total: 1, next_page_uri: null, uri: '',
+        page: 0, page_size: 50, next_page_uri: null, uri: '',
       }),
       jsonResponse(ipAddressPayload()),
       jsonResponse(ipAddressPayload()),
@@ -319,7 +319,7 @@ describe('SIP Domain mappings (historical no-Auth namespace)', () => {
       jsonResponse(mappingPayload()),
       jsonResponse({
         credential_list_mappings: [mappingPayload()],
-        page: 0, page_size: 50, total: 1, next_page_uri: null, uri: '',
+        page: 0, page_size: 50, next_page_uri: null, uri: '',
       }),
       jsonResponse(mappingPayload()),
       noContentResponse(),

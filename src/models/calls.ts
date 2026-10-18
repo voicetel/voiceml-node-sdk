@@ -1,4 +1,4 @@
-import type { HttpMethod, PageEnvelope } from './common.js';
+import type { HttpMethod, Open, PageEnvelope } from './common.js';
 
 export type CallStatus =
   | 'queued'
@@ -27,36 +27,37 @@ export type RecordingChannelsLayout = 'mono' | 'dual';
 export type RecordingTrack = 'inbound' | 'outbound' | 'both';
 export type TrimMode = 'trim-silence' | 'do-not-trim';
 export type CallStatusCallbackEvent = 'initiated' | 'ringing' | 'answered' | 'completed';
+export type RecordingStatusCallbackEvent = 'in-progress' | 'completed' | 'absent';
 export type UpdateCallStatus = 'completed' | 'canceled';
 
 export interface Call {
-  sid: string;
-  account_sid: string;
-  api_version: string;
-  to?: string;
-  to_formatted?: string;
-  from?: string;
-  from_formatted?: string;
-  parent_call_sid?: string;
-  caller_name?: string;
-  forwarded_from?: string;
-  status: CallStatus;
-  direction: CallDirection;
-  answered_by?: AnsweredBy;
-  start_time?: string;
-  end_time?: string;
-  duration?: string;
-  price?: string;
-  price_unit?: string;
-  phone_number_sid?: string;
-  annotation?: string;
-  group_sid?: string;
-  queue_time?: string;
-  trunk_sid?: string;
-  date_created: string;
-  date_updated: string;
-  uri: string;
-  subresource_uris?: Record<string, string>;
+  sid: string | null;
+  account_sid: string | null;
+  api_version: string | null;
+  to?: string | null;
+  to_formatted?: string | null;
+  from?: string | null;
+  from_formatted?: string | null;
+  parent_call_sid?: string | null;
+  caller_name?: string | null;
+  forwarded_from?: string | null;
+  status: Open<CallStatus>;
+  direction: Open<CallDirection> | null;
+  answered_by?: Open<AnsweredBy> | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  duration?: string | null;
+  price?: string | null;
+  price_unit?: string | null;
+  phone_number_sid?: string | null;
+  annotation?: string | null;
+  group_sid?: string | null;
+  queue_time?: string | null;
+  trunk_sid?: string | null;
+  date_created: string | null;
+  date_updated: string | null;
+  uri: string | null;
+  subresource_uris?: Record<string, string> | null;
 }
 
 export interface CallList extends PageEnvelope {
@@ -91,8 +92,9 @@ export interface CreateCallRequest {
   AsyncAmdStatusCallbackMethod?: string;
   Record?: boolean;
   RecordingStatusCallback?: string;
-  RecordingStatusCallbackMethod?: string;
-  RecordingStatusCallbackEvent?: string;
+  RecordingStatusCallbackMethod?: HttpMethod;
+  /** Recording lifecycle events to report. Repeatable: rendered as multiple form params. */
+  RecordingStatusCallbackEvent?: RecordingStatusCallbackEvent[];
   RecordingChannels?: RecordingChannelsLayout;
   RecordingTrack?: RecordingTrack;
   Trim?: TrimMode;
@@ -108,7 +110,7 @@ export interface CreateCallRequest {
 }
 
 /**
- * Body for `POST /Calls/{sid}`. Three flows on the same endpoint (mirrors Twilio):
+ * Body for `POST /Calls/{sid}`. Three flows on the same endpoint:
  *   - `Status=completed|canceled` — terminate. Wins over any TwiML source.
  *   - `Twiml=<inline>` — execute inline TwiML on the live call (wins over `Url`).
  *   - `Url=…` — fetch new TwiML and execute it on the live call.
@@ -127,33 +129,29 @@ export interface UpdateCallRequest {
   StatusCallbackEvent?: CallStatusCallbackEvent[];
 }
 
+/**
+ * Filters for `GET /Calls`. The camelCase date filters map to Twilio's wire names
+ * (`startTime` → `StartTime`, `startTimeLt` → `StartTime<`, …). Equality filters take a UTC
+ * day (`YYYY-MM-DD`; a `Date` is sent as its UTC day); the `<` / `>` bounds take a date or
+ * date-time (a `Date` is sent as ISO-8601 UTC).
+ */
 export interface ListCallsParams {
   To?: string;
   From?: string;
   Status?: CallStatus;
   ParentCallSid?: string;
-  /** Twilio wire name: `StartTime` (full UTC day). */
-  startTime?: string;
-  /** Twilio wire name: `StartTime<`. */
-  startTimeLt?: string;
-  /** Twilio wire name: `StartTime>`. */
-  startTimeGt?: string;
-  /** Twilio wire name: `EndTime` (full UTC day). */
-  endTime?: string;
-  /** Twilio wire name: `EndTime<`. */
-  endTimeLt?: string;
-  /** Twilio wire name: `EndTime>`. */
-  endTimeGt?: string;
-  /**
-   * Twilio wire name: `StartTime>=`.
-   * @deprecated Prefer `startTimeGt` — legacy inclusive lower bound kept for compatibility.
-   */
-  startTimeGte?: string;
-  /**
-   * Twilio wire name: `StartTime<=`.
-   * @deprecated Prefer `startTimeLt` — legacy inclusive upper bound kept for compatibility.
-   */
-  startTimeLte?: string;
+  /** Wire name `StartTime` (full UTC day). */
+  startTime?: string | Date;
+  /** Wire name `StartTime<`. */
+  startTimeLt?: string | Date;
+  /** Wire name `StartTime>`. */
+  startTimeGt?: string | Date;
+  /** Wire name `EndTime` (full UTC day). */
+  endTime?: string | Date;
+  /** Wire name `EndTime<`. */
+  endTimeLt?: string | Date;
+  /** Wire name `EndTime>`. */
+  endTimeGt?: string | Date;
   Page?: number;
   PageSize?: number;
   PageToken?: string;

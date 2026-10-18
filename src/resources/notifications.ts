@@ -1,32 +1,33 @@
-import type { ListNotificationsParams, NotificationsList } from '../models/index.js';
+import type {
+  ListNotificationsParams,
+  Notification,
+  NotificationList,
+} from '../models/index.js';
+import { paginate } from '../pagination.js';
 import { BaseResource } from './base.js';
+import { listNotificationsToQuery } from './calls.js';
 
-/** Account-scoped `/Notifications` compat stubs (always empty list; get returns 404). */
+/** Account-scoped `/Notifications` — error and warning log entries raised while handling calls. */
 export class NotificationsResource extends BaseResource {
-  list(params: ListNotificationsParams = {}): Promise<NotificationsList> {
-    return this.t.request<NotificationsList>({
+  async list(params: ListNotificationsParams = {}): Promise<NotificationList> {
+    return this.t.request<NotificationList>({
       method: 'GET',
       path: this.path('Notifications'),
       params: listNotificationsToQuery(params),
     });
   }
 
-  get(notificationSid: string): Promise<Record<string, unknown>> {
-    return this.t.request<Record<string, unknown>>({
+  /** Lazily walk every page of `/Notifications`, following `next_page_uri`. */
+  async *iterate(
+    params: ListNotificationsParams = {},
+  ): AsyncGenerator<Notification, void, void> {
+    yield* paginate(this.t, await this.list(params));
+  }
+
+  async get(notificationSid: string): Promise<Notification> {
+    return this.t.request<Notification>({
       method: 'GET',
       path: this.path('Notifications', notificationSid),
     });
   }
-}
-
-function listNotificationsToQuery(p: ListNotificationsParams): Record<string, unknown> {
-  return {
-    Page: p.Page,
-    PageSize: p.PageSize,
-    PageToken: p.PageToken,
-    Log: p.Log,
-    MessageDate: p.messageDate,
-    'MessageDate<': p.messageDateLt,
-    'MessageDate>': p.messageDateGt,
-  };
 }

@@ -1,18 +1,17 @@
 /**
  * Per-product host resolution for the VoiceML API.
  *
- * Twilio splits its products across dedicated subdomains (`api.twilio.com`,
- * `conversations.twilio.com`, `messaging.twilio.com`, …). VoiceML mirrors that
- * shape on `voicetel.com`: the Conversations product answers on
+ * VoiceML serves its products on dedicated subdomains of `voicetel.com`, as
+ * Twilio-compatible clients expect: the Conversations product answers on
  * `conversations.voicetel.com` and the Messaging Service product on
  * `messaging.voicetel.com`, while everything else stays on the default
  * `voiceml.voicetel.com` host. Conversation Service (`IS…`) and Messaging
- * Service (`MG…`) share the identical `/v1/Services` path shape, so the *host*
+ * Service (`MG…`) share the same `/v1/Services` path, so the *host*
  * is what disambiguates them on the wire.
  *
  * Given the configured `baseUrl` this module derives the two product hosts by
  * swapping the leftmost `voiceml` label — but only for recognised
- * `*.voicetel.com` hosts. For any other base URL (a self-hosted callBroadcast
+ * `*.voicetel.com` hosts. For any other base URL (a self-hosted VoiceML
  * instance, a test stub, a regional override) the product hosts fall back to
  * the configured host unchanged, so a single-host deployment keeps working. A
  * caller who needs Messaging Service against a custom host points

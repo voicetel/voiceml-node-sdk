@@ -1,3 +1,4 @@
+export * from './accounts.js';
 export * from './applications.js';
 export * from './assistants_v1.js';
 export * from './calls.js';
@@ -8,6 +9,7 @@ export * from './diagnostics.js';
 export * from './incoming_phone_numbers.js';
 export * from './messages.js';
 export * from './messaging_v1.js';
+export * from './monitor.js';
 export * from './notifications.js';
 export * from './pricing.js';
 export * from './payments.js';

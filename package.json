@@ -1,36 +1,47 @@
 {
   "name": "@voicetel.com/voiceml",
   "version": "0.9.2",
-  "description": "Official TypeScript/Node SDK for the VoiceML REST API (Twilio-compatible voice + AMD service from VoiceTel)",
+  "description": "Official TypeScript/Node SDK for the VoiceML REST API (Twilio-compatible voice, messaging and AMD API from VoiceTel)",
   "type": "module",
-  "main": "./dist/cjs/index.cjs",
+  "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
-  "types": "./dist/types/index.d.ts",
+  "types": "./dist/cjs/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.cjs"
-    }
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
+  "sideEffects": false,
   "scripts": {
-    "build": "npm run build:esm && npm run build:cjs && npm run build:types",
+    "clean": "node scripts/clean.mjs",
+    "build": "npm run clean && npm run build:esm && npm run build:cjs",
     "build:esm": "tsc -p tsconfig.esm.json",
-    "build:cjs": "tsc -p tsconfig.cjs.json && node scripts/rename-cjs.mjs",
-    "build:types": "tsc -p tsconfig.types.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json && node scripts/write-cjs-package.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src tests"
+    "lint": "eslint .",
+    "check:package": "publint --strict && attw --pack .",
+    "smoke": "node scripts/smoke-pack.mjs"
   },
   "engines": {
-    "node": ">=18.17"
+    "node": ">=20"
   },
+  "packageManager": "npm@11.19.0",
   "keywords": [
     "voiceml",
     "voicetel",
@@ -41,23 +52,24 @@
   ],
   "author": "VoiceTel <support@voicetel.com>",
   "license": "SEE LICENSE IN LICENSE",
-  "homepage": "https://voiceml.voicetel.com",
+  "homepage": "https://voicetel.com/docs/api/v0.9/voiceml/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/voicetel/voiceml-node-sdk"
+    "url": "git+https://github.com/voicetel/voiceml-node-sdk.git"
   },
   "bugs": {
     "url": "https://github.com/voicetel/voiceml-node-sdk/issues"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.0",
-    "@types/node": "^26.1.1",
-    "@vitest/coverage-v8": "^4.1.8",
-    "eslint": "^10.0.0",
-    "globals": "^17.6.0",
-    "msw": "^2.4.0",
-    "typescript": "^6.0.0",
-    "typescript-eslint": "^8.0.0",
-    "vitest": "^4.1.7"
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.5",
+    "@vitest/coverage-v8": "^4.1.12",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "publint": "^0.3.25",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^4.1.12"
   }
 }
