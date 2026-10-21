@@ -30,7 +30,16 @@ export interface StartTranscriptionRequest {
   ProfanityFilter?: boolean;
   PartialResults?: boolean;
   Hints?: string;
-  StatusCallback?: string;
+  /** Engine-specific model hint (e.g. Deepgram's `nova-3`). */
+  SpeechModel?: string;
+  EnableAutomaticPunctuation?: boolean;
+  /**
+   * Accepted for Twilio compatibility; VoiceML has no Conversation Intelligence,
+   * so a set value logs a 32655 Notification and transcription proceeds.
+   */
+  IntelligenceService?: string;
+  /** Transcription lifecycle webhook (Twilio's REST name; there is no `StatusCallback` alias). */
+  StatusCallbackUrl?: string;
   StatusCallbackMethod?: string;
   StatusCallbackEvents?: string;
 }

@@ -99,6 +99,11 @@ export interface CreateCallRequest {
   RecordingTrack?: RecordingTrack;
   Trim?: TrimMode;
   Timeout?: number;
+  /**
+   * Max call duration in seconds. An explicit `0` or a value above `14400` is rejected;
+   * a negative value disables the limit. Omitted, the 4-hour default cap applies.
+   */
+  TimeLimit?: number;
   SendDigits?: string;
   CallerId?: string;
   CallReason?: string;

@@ -73,6 +73,13 @@ interface CreateMessageFields {
   /** Delivery-status callback URL. */
   StatusCallback?: string;
   StatusCallbackMethod?: HttpMethod;
+  /**
+   * Schedule the message for a future UTC time (sent as ISO-8601 UTC).
+   * Requires `ScheduleType` and `MessagingServiceSid`.
+   */
+  SendAt?: Date;
+  /** `fixed` is the only supported value. Requires `SendAt` and `MessagingServiceSid`. */
+  ScheduleType?: 'fixed';
 }
 
 /**

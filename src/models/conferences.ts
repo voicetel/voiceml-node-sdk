@@ -83,6 +83,11 @@ export interface CreateParticipantRequest {
   StatusCallbackMethod?: HttpMethod;
   /** Lifecycle events to report. Repeatable: rendered as multiple form params. */
   StatusCallbackEvent?: CallStatusCallbackEvent[];
+  /** Participant's conference lifecycle webhook. */
+  ConferenceStatusCallback?: string;
+  ConferenceStatusCallbackMethod?: HttpMethod;
+  /** Space- or comma-separated conference event filter (default `start end`). */
+  ConferenceStatusCallbackEvent?: string;
 }
 
 export interface ListConferencesParams {

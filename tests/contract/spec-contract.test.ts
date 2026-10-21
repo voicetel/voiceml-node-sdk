@@ -163,7 +163,7 @@ describe('spec contract', async () => {
   const calls = await walkClient(t);
 
   it('loads the vendored public spec', () => {
-    expect(loadSpec().info.version).toBe('0.9.3');
+    expect(loadSpec().info.version).toBe('0.9.4');
     expect(ops).toHaveLength(333);
   });
 

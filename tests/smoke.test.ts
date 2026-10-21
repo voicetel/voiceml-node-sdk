@@ -113,6 +113,7 @@ describe('calls.create', () => {
       To: '+14155550100',
       From: '+14155550101',
       Url: 'https://example.com/twiml',
+      TimeLimit: 3600,
     };
     const call = await c.calls.create(body);
     expect(call.sid).toMatch(/^CA/);
@@ -130,7 +131,7 @@ describe('calls.create', () => {
     expect(params).toBeInstanceOf(URLSearchParams);
     // Exact wire bytes: `+` must travel as %2B, never as a literal `+` (a space).
     expect(params.toString()).toBe(
-      'To=%2B14155550100&From=%2B14155550101&Url=https%3A%2F%2Fexample.com%2Ftwiml',
+      'To=%2B14155550100&From=%2B14155550101&Url=https%3A%2F%2Fexample.com%2Ftwiml&TimeLimit=3600',
     );
   });
 });
@@ -1010,6 +1011,9 @@ describe('v0.6.6 — conferences.createParticipant', () => {
     await c.conferences.createParticipant(cfSid, {
       From: '+14155550101',
       To: '+14155550100',
+      ConferenceStatusCallback: 'https://example.com/conf-status',
+      ConferenceStatusCallbackMethod: 'GET',
+      ConferenceStatusCallbackEvent: 'start end',
     });
 
     expect(calls[0]!.init.method).toBe('POST');
@@ -1019,6 +1023,9 @@ describe('v0.6.6 — conferences.createParticipant', () => {
     const params = calls[0]!.init.body as URLSearchParams;
     expect(params.get('From')).toBe('+14155550101');
     expect(params.get('To')).toBe('+14155550100');
+    expect(params.get('ConferenceStatusCallback')).toBe('https://example.com/conf-status');
+    expect(params.get('ConferenceStatusCallbackMethod')).toBe('GET');
+    expect(params.get('ConferenceStatusCallbackEvent')).toBe('start end');
   });
 });
 
@@ -1178,7 +1185,7 @@ describe('v0.6.6 — conferences recording sub-resource', () => {
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
     await c.conferences.getRecording(cfSid, reSid);
-    await c.conferences.updateRecording(cfSid, reSid, { Status: 'stopped' });
+    await c.conferences.updateRecording(cfSid, reSid, { Status: 'paused', PauseBehavior: 'skip' });
     await c.conferences.deleteRecording(cfSid, reSid);
 
     expect(new URL(calls[0]!.url).pathname).toBe(
@@ -1189,7 +1196,8 @@ describe('v0.6.6 — conferences recording sub-resource', () => {
       `/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences/${cfSid}/Recordings/${reSid}.json`,
     );
     const params = calls[1]!.init.body as URLSearchParams;
-    expect(params.get('Status')).toBe('stopped');
+    expect(params.get('Status')).toBe('paused');
+    expect(params.get('PauseBehavior')).toBe('skip');
     expect(calls[2]!.init.method).toBe('DELETE');
     expect(new URL(calls[2]!.url).pathname).toBe(
       `/2010-04-01/Accounts/${ACCOUNT_SID}/Conferences/${cfSid}/Recordings/${reSid}.json`,
@@ -1534,6 +1542,28 @@ describe('v0.7.0 — messages.create', () => {
     expect(params.get('Body')).toBe('hello');
     expect(params.get('From')).toBe('+14155550101');
   });
+
+  it('schedules with SendAt (ISO-8601 UTC) + ScheduleType=fixed', async () => {
+    const { fetch, calls } = fakeFetch([
+      jsonResponse({ ...messagePayload(), status: 'scheduled' }, 201),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.messages.create({
+      To: '+14155550100',
+      Body: 'hello later',
+      MessagingServiceSid: 'MG' + '0'.repeat(32),
+      SendAt: new Date(Date.UTC(2026, 10, 2, 14, 30, 0)),
+      ScheduleType: 'fixed',
+    });
+
+    const params = calls[0]!.init.body as URLSearchParams;
+    // Insertion order pins the exact bytes; the Date lands as ISO-8601 UTC.
+    expect(params.toString()).toBe(
+      'To=%2B14155550100&Body=hello+later&MessagingServiceSid=MG00000000000000000000000000000000' +
+        '&SendAt=2026-11-02T14%3A30%3A00Z&ScheduleType=fixed',
+    );
+  });
 });
 
 describe('v0.7.0 — messages.update', () => {
@@ -1687,5 +1717,121 @@ describe('v0.7.0 — calls.updatePayment', () => {
     const p1 = calls[1]!.init.body as URLSearchParams;
     expect(p1.get('Capture')).toBe('security-code');
     expect(p1.has('Status')).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// v0.9.5: spec 0.9.4 — Applications SMS webhooks + PublicApplicationConnectEnabled,
+// call-transcription StatusCallbackUrl rename + engine controls.
+// ---------------------------------------------------------------------------
+
+function applicationPayload(sid: string = 'AP' + '0'.repeat(32)) {
+  return {
+    sid,
+    account_sid: ACCOUNT_SID,
+    friendly_name: 'app',
+    api_version: '2010-04-01',
+    voice_url: 'https://example.com/voice',
+    voice_caller_id_lookup: false,
+    status_callback: '',
+    date_created: 'Mon, 19 May 2026 12:00:00 +0000',
+    date_updated: 'Mon, 19 May 2026 12:00:00 +0000',
+    uri: `/2010-04-01/Accounts/${ACCOUNT_SID}/Applications/${sid}.json`,
+  };
+}
+
+describe('v0.9.5 — applications SMS fields', () => {
+  it('create sends SmsUrl/SmsMethod/SmsFallbackUrl/SmsFallbackMethod/PublicApplicationConnectEnabled', async () => {
+    const { fetch, calls } = fakeFetch([jsonResponse(applicationPayload(), 201)]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.applications.create({
+      FriendlyName: 'app',
+      SmsUrl: 'https://example.com/sms',
+      SmsMethod: 'POST',
+      SmsFallbackUrl: 'https://example.com/sms-fallback',
+      SmsFallbackMethod: 'GET',
+      PublicApplicationConnectEnabled: true,
+    });
+
+    expect(calls[0]!.init.method).toBe('POST');
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/Applications.json`,
+    );
+    const params = calls[0]!.init.body as URLSearchParams;
+    expect(params.toString()).toBe(
+      'FriendlyName=app&SmsUrl=https%3A%2F%2Fexample.com%2Fsms&SmsMethod=POST' +
+        '&SmsFallbackUrl=https%3A%2F%2Fexample.com%2Fsms-fallback&SmsFallbackMethod=GET' +
+        '&PublicApplicationConnectEnabled=true',
+    );
+  });
+
+  it('update sends the same SMS fields', async () => {
+    const sid = 'AP' + 'a'.repeat(32);
+    const { fetch, calls } = fakeFetch([jsonResponse(applicationPayload(sid))]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.applications.update(sid, {
+      SmsUrl: 'https://new.example.com/sms',
+      SmsMethod: 'GET',
+      SmsFallbackUrl: 'https://new.example.com/sms-fallback',
+      SmsFallbackMethod: 'POST',
+      PublicApplicationConnectEnabled: false,
+    });
+
+    expect(calls[0]!.init.method).toBe('POST');
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/Applications/${sid}.json`,
+    );
+    const params = calls[0]!.init.body as URLSearchParams;
+    expect(params.get('SmsUrl')).toBe('https://new.example.com/sms');
+    expect(params.get('SmsMethod')).toBe('GET');
+    expect(params.get('SmsFallbackUrl')).toBe('https://new.example.com/sms-fallback');
+    expect(params.get('SmsFallbackMethod')).toBe('POST');
+    // Booleans must serialise as the literal string 'false'.
+    expect(params.get('PublicApplicationConnectEnabled')).toBe('false');
+  });
+});
+
+describe('v0.9.5 — calls.startTranscription', () => {
+  it('sends StatusCallbackUrl (not StatusCallback) plus engine controls', async () => {
+    const callSid = 'CA' + 'f'.repeat(32);
+    const { fetch, calls } = fakeFetch([
+      jsonResponse(
+        {
+          sid: 'GT' + '0'.repeat(32),
+          account_sid: ACCOUNT_SID,
+          call_sid: callSid,
+          status: 'in-progress',
+          uri: '/x',
+        },
+        201,
+      ),
+    ]);
+    const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
+
+    await c.calls.startTranscription(callSid, {
+      LanguageCode: 'en-US',
+      SpeechModel: 'nova-3',
+      EnableAutomaticPunctuation: true,
+      IntelligenceService: 'voice_intelligence_service',
+      StatusCallbackUrl: 'https://example.com/transcription-status',
+      StatusCallbackMethod: 'POST',
+      StatusCallbackEvents: 'in-progress completed',
+    });
+
+    expect(calls[0]!.init.method).toBe('POST');
+    expect(new URL(calls[0]!.url).pathname).toBe(
+      `/2010-04-01/Accounts/${ACCOUNT_SID}/Calls/${callSid}/Transcriptions.json`,
+    );
+    const params = calls[0]!.init.body as URLSearchParams;
+    expect(params.toString()).toBe(
+      'LanguageCode=en-US&SpeechModel=nova-3&EnableAutomaticPunctuation=true' +
+        '&IntelligenceService=voice_intelligence_service' +
+        '&StatusCallbackUrl=https%3A%2F%2Fexample.com%2Ftranscription-status' +
+        '&StatusCallbackMethod=POST&StatusCallbackEvents=in-progress+completed',
+    );
+    // The renamed field travels under its Twilio REST name only.
+    expect(params.has('StatusCallback')).toBe(false);
   });
 });

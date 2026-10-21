@@ -52,6 +52,13 @@ export interface ApplicationBody {
   MessageStatusCallback?: string;
   /** Legacy alias of `MessageStatusCallback`. */
   SmsStatusCallback?: string;
+  /** Inbound-SMS webhook URL for this Application. */
+  SmsUrl?: string;
+  SmsMethod?: HttpMethod;
+  /** Called when requesting/executing the TwiML at `SmsUrl` fails. */
+  SmsFallbackUrl?: string;
+  SmsFallbackMethod?: HttpMethod;
+  PublicApplicationConnectEnabled?: boolean;
 }
 
 export type CreateApplicationRequest = ApplicationBody;

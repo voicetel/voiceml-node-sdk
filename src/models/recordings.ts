@@ -118,6 +118,8 @@ export interface UpdateCallRecordingRequest {
 /** Body for `POST /Conferences/{ConferenceSid}/Recordings/{Sid}`. */
 export interface UpdateConferenceRecordingRequest {
   Status: RecordingUpdateStatus;
+  /** With `Status=paused`: `skip` omits the paused span; `silence` (default) keeps it as silence. */
+  PauseBehavior?: string;
 }
 
 /** @deprecated Use {@link UpdateCallRecordingRequest} or {@link UpdateConferenceRecordingRequest}. */
