@@ -44,10 +44,10 @@ const CASES: Case[] = [
   },
   {
     name: 'outgoing_caller_ids.create',
-    call: (c) => c.outgoingCallerIds.create({ PhoneNumber: '+14155550100', FriendlyName: 'Desk' }),
+    call: (c) => c.outgoingCallerIds.create({ PhoneNumber: '+14155550100', FriendlyName: 'Desk', CallDelay: 5, Extension: '123', StatusCallback: 'https://example.com/v', StatusCallbackMethod: 'GET' }),
     method: 'POST',
     url: `${A}/OutgoingCallerIds.json`,
-    body: 'PhoneNumber=%2B14155550100&FriendlyName=Desk',
+    body: 'PhoneNumber=%2B14155550100&FriendlyName=Desk&CallDelay=5&Extension=123&StatusCallback=https%3A%2F%2Fexample.com%2Fv&StatusCallbackMethod=GET',
   },
   { name: 'outgoing_caller_ids.fetch', call: (c) => c.outgoingCallerIds.get('PN1'), method: 'GET', url: `${A}/OutgoingCallerIds/PN1.json` },
   {

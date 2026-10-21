@@ -108,6 +108,12 @@ export interface CreateIncomingPhoneNumberRequest extends IncomingPhoneNumberSms
   VoiceMethod?: HttpMethod;
   VoiceFallbackUrl?: string;
   VoiceFallbackMethod?: HttpMethod;
+  /** Bind inbound calls to an Application (`AP` + 32 hex); it wins over the `Voice*` URLs. */
+  VoiceApplicationSid?: string;
+  /** Number-level lifecycle webhook for inbound calls. */
+  StatusCallback?: string;
+  /** HTTP method for `StatusCallback`. */
+  StatusCallbackMethod?: HttpMethod;
 }
 
 /** Body for `POST /IncomingPhoneNumbers/{Local,Mobile,TollFree}` — the typed creates. */
@@ -123,4 +129,10 @@ export interface UpdateIncomingPhoneNumberRequest extends IncomingPhoneNumberSms
   VoiceMethod?: HttpMethod;
   VoiceFallbackUrl?: string;
   VoiceFallbackMethod?: HttpMethod;
+  /** Bind inbound calls to an Application (`AP` + 32 hex); it wins over the `Voice*` URLs. */
+  VoiceApplicationSid?: string;
+  /** Number-level lifecycle webhook for inbound calls. */
+  StatusCallback?: string;
+  /** HTTP method for `StatusCallback`. */
+  StatusCallbackMethod?: HttpMethod;
 }

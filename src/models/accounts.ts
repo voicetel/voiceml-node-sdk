@@ -131,6 +131,14 @@ export interface CreateOutgoingCallerIdRequest {
   /** E.164 number to verify. */
   PhoneNumber: string;
   FriendlyName?: string;
+  /** Seconds to wait before placing the verification call (0–60). */
+  CallDelay?: number;
+  /** Extension to dial after the verification call connects. */
+  Extension?: string;
+  /** Webhook for verification-call status updates. */
+  StatusCallback?: string;
+  /** HTTP method for `StatusCallback`. */
+  StatusCallbackMethod?: HttpMethod;
 }
 
 export interface UpdateOutgoingCallerIdRequest {

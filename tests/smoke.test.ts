@@ -550,6 +550,9 @@ describe('incomingPhoneNumbers', () => {
       PhoneNumber: '+14155550100',
       VoiceUrl: 'https://example.com/voice',
       VoiceMethod: 'POST',
+      VoiceApplicationSid: 'AP' + 'd'.repeat(32),
+      StatusCallback: 'https://example.com/status',
+      StatusCallbackMethod: 'POST',
     });
     expect(result.sid).toMatch(/^PN/);
     expect(result.phone_number).toBe('+14155550100');
@@ -564,6 +567,9 @@ describe('incomingPhoneNumbers', () => {
     expect(params.get('PhoneNumber')).toBe('+14155550100');
     expect(params.get('VoiceUrl')).toBe('https://example.com/voice');
     expect(params.get('VoiceMethod')).toBe('POST');
+    expect(params.get('VoiceApplicationSid')).toBe('AP' + 'd'.repeat(32));
+    expect(params.get('StatusCallback')).toBe('https://example.com/status');
+    expect(params.get('StatusCallbackMethod')).toBe('POST');
   });
 
   it('get — fetches by PN sid with .json suffix', async () => {
@@ -584,7 +590,12 @@ describe('incomingPhoneNumbers', () => {
     const { fetch, calls } = fakeFetch([jsonResponse(incomingPhoneNumberPayload(sid))]);
     const c = new Client({ accountSid: ACCOUNT_SID, apiKey: API_KEY, fetch });
 
-    await c.incomingPhoneNumbers.update(sid, { VoiceUrl: 'https://new.example.com/voice' });
+    await c.incomingPhoneNumbers.update(sid, {
+      VoiceUrl: 'https://new.example.com/voice',
+      VoiceApplicationSid: 'AP' + 'e'.repeat(32),
+      StatusCallback: 'https://new.example.com/status',
+      StatusCallbackMethod: 'GET',
+    });
 
     expect(calls[0]!.init.method).toBe('POST');
     expect(new URL(calls[0]!.url).pathname).toBe(
@@ -592,6 +603,9 @@ describe('incomingPhoneNumbers', () => {
     );
     const params = calls[0]!.init.body as URLSearchParams;
     expect(params.get('VoiceUrl')).toBe('https://new.example.com/voice');
+    expect(params.get('VoiceApplicationSid')).toBe('AP' + 'e'.repeat(32));
+    expect(params.get('StatusCallback')).toBe('https://new.example.com/status');
+    expect(params.get('StatusCallbackMethod')).toBe('GET');
   });
 
   it('delete — DELETE on {sid}.json, 204 returns void', async () => {
