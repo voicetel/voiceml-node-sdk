@@ -74,7 +74,7 @@ afterEach(() => {
 
 describe('module surface', () => {
   it('exports the right version', () => {
-    expect(VERSION).toBe('0.9.4');
+    expect(VERSION).toBe('0.9.5');
   });
 
   it('requires accountSid + apiKey', () => {

@@ -3,6 +3,49 @@
 All notable changes to `@voicetel.com/voiceml` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.9.5] - 2026-10-21
+
+### Added
+
+- **Calls** — `CreateCallRequest` (`POST …/Calls.json`) accepts `TimeLimit`,
+  the maximum call duration in seconds. An explicit `0` or a value above
+  `14400` is rejected (error 13216); a negative value disables the limit.
+  Omitted, the 4-hour default cap applies.
+- **Conferences** — `CreateParticipantRequest`
+  (`POST …/Conferences/{ConferenceSid}/Participants.json`) accepts
+  `ConferenceStatusCallback`, `ConferenceStatusCallbackMethod` and
+  `ConferenceStatusCallbackEvent`: the participant's conference lifecycle
+  webhook, its HTTP method (`GET`/`POST`, default `POST`) and the event
+  filter (default `start end`).
+- **Conference recordings** — `UpdateConferenceRecordingRequest`
+  (`POST …/Conferences/{ConferenceSid}/Recordings/{Sid}.json`) accepts
+  `PauseBehavior`: with `Status=paused`, `skip` leaves the paused span out
+  of the recording while `silence` (the default) keeps it as silence.
+  Mirrors the call recording update.
+- **Applications** — create and update (`POST …/Applications.json`,
+  `POST …/Applications/{Sid}.json`) accept `SmsUrl` / `SmsMethod` and
+  `SmsFallbackUrl` / `SmsFallbackMethod` (the inbound-SMS webhook and its
+  fallback) plus `PublicApplicationConnectEnabled`.
+- **Messages** — `CreateMessageRequest` (`POST …/Messages.json`) accepts
+  `SendAt` (a `Date`, sent as ISO-8601 UTC) and `ScheduleType` (`'fixed'`
+  is the only supported value) to schedule a message for future delivery.
+  Both require `MessagingServiceSid` server-side.
+- **Call transcriptions** — `StartTranscriptionRequest`
+  (`POST …/Calls/{CallSid}/Transcriptions.json`) accepts `SpeechModel`
+  (engine-specific model hint, e.g. Deepgram's `nova-3`),
+  `EnableAutomaticPunctuation` and `IntelligenceService` (accepted for
+  compatibility; a set value logs a 32655 Notification and the
+  transcription proceeds).
+- The vendored OpenAPI fixture behind the contract tests is refreshed to
+  spec 0.9.4.
+
+### Changed
+
+- **Call transcriptions** — `StartTranscriptionRequest.StatusCallback` is
+  renamed `StatusCallbackUrl`. The old wire name was never applied
+  server-side; `StatusCallbackMethod` and `StatusCallbackEvents` are
+  unchanged.
+
 ## [0.9.4] - 2026-10-21
 
 ### Added

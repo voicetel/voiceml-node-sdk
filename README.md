@@ -2,7 +2,7 @@
 
 The official TypeScript / Node client for the [VoiceML REST API](https://voicetel.com/docs/api/v0.9/voiceml/) — VoiceTel's Twilio-compatible voice, messaging and answering-machine-detection API, with end-to-end TypeScript types and dual ESM / CommonJS distribution.
 
-![Version](https://img.shields.io/badge/version-0.9.4-blue)
+![Version](https://img.shields.io/badge/version-0.9.5-blue)
 ![Node](https://img.shields.io/badge/node-%E2%89%A520-blue)
 ![License](https://img.shields.io/badge/license-MIT%20%2B%20Commons%20Clause-green)
 ![Typed](https://img.shields.io/badge/typed-strict-blue)

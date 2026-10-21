@@ -1,6 +1,6 @@
 {
   "name": "@voicetel.com/voiceml",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "Official TypeScript/Node SDK for the VoiceML REST API (Twilio-compatible voice, messaging and AMD API from VoiceTel)",
   "type": "module",
   "main": "./dist/cjs/index.js",
