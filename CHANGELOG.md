@@ -3,6 +3,24 @@
 All notable changes to `@voicetel.com/voiceml` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.9.4] - 2026-10-21
+
+### Added
+
+- **Incoming phone numbers** — `CreateIncomingPhoneNumberRequest` and
+  `UpdateIncomingPhoneNumberRequest` (create / update on
+  `…/IncomingPhoneNumbers.json`) accept `VoiceApplicationSid` (binds inbound
+  calls to an Application; it wins over the `Voice*` URLs), `StatusCallback`
+  and `StatusCallbackMethod` (number-level lifecycle webhook for inbound
+  calls).
+- **Outgoing caller IDs** — `CreateOutgoingCallerIdRequest`
+  (`POST …/OutgoingCallerIds.json` verification) accepts `CallDelay` (seconds
+  to wait before placing the verification call, 0–60), `Extension` (digits to
+  dial after the verification call connects), `StatusCallback` and
+  `StatusCallbackMethod` (verification-call status updates).
+- The vendored OpenAPI fixture behind the contract tests is refreshed to spec
+  0.9.3.
+
 ## [0.9.3] - 2026-10-18
 
 ### Breaking changes
