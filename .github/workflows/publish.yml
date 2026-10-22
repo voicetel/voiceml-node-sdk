@@ -59,6 +59,14 @@ jobs:
         run: npm run build
 
       - name: Publish (with provenance)
-        run: npm publish --provenance --access public
+        # Idempotent: a tag re-push or duplicate trigger must not fail with
+        # E409 when the version is already live on the registry.
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if npm view "@voicetel.com/voiceml@$version" version >/dev/null 2>&1; then
+            echo "@voicetel.com/voiceml@$version is already published — skipping"
+          else
+            npm publish --provenance --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
